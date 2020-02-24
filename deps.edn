@@ -1,0 +1,28 @@
+{:deps
+ {org.clojure/clojure                {:mvn/version "1.10.1"}
+  org.clojure/clojurescript          {:mvn/version "1.10.597"}
+  org.clojure/tools.namespace        {:mvn/version "1.0.0"}
+  org.clojure/tools.cli              {:mvn/version "0.4.2"}
+  markdown-clj                       {:mvn/version "1.10.2"}
+  de.ubercode.clostache/clostache    {:mvn/version "1.4.0"}}
+
+ :paths ["src"]
+
+ :aliases
+ {:repl
+  {:extra-paths ["resources"]
+   :extra-deps
+   {com.bhauman/rebel-readline       {:mvn/version "RELEASE"}
+    org.clojure/tools.nrepl          {:mvn/version "RELEASE"}
+    cider/cider-nrepl                {:mvn/version "RELEASE"}}}
+
+  :test
+  {:extra-paths ["test"]
+   :extra-deps
+   {lambdaisland/kaocha              {:mvn/version "RELEASE"}}}
+
+  :outdated
+  {:extra-deps
+   {olical/depot                     {:mvn/version "1.8.4"}}
+   :main-opts  ["-m" "depot.outdated.main" "-a" "outdated"]}}}
+
