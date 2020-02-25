@@ -3,7 +3,8 @@
     [sidenotes.fs :as fs]
     [sidenotes.parser :as parser]
     [sidenotes.renderer :as renderer]
-    [clojure.edn :as edn]))
+    [clojure.edn :as edn])
+  (:gen-class))
 
 (defn read-deps
   "Read the given deps.edn file and return the contained dependencies and source paths."
@@ -14,7 +15,7 @@
 
 (def default-settings
   {:output-to "docs"
-   :theme "standard"})
+   :theme "marginalia"})
 
 (defn read-settings
   "Read the settings from a config file."

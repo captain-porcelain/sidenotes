@@ -2,9 +2,10 @@
   (:require
     [sidenotes.fs :as fs]
     [markdown.core :as md]
+    [clojure.edn :as edn]
     [clostache.parser :as mustache]))
 
-(def theme-base "resources/themes/")
+(def theme-base "themes/")
 
 (defn find-theme
   "Find and the path to the used theme."
@@ -55,7 +56,7 @@
 (defn render-toc
   "Render the table of contents."
   [parsed-sources project settings theme]
-  (let [toc-template (slurp (str theme "/toc.html"))
+  (let [toc-template (fs/slurp-resource (str theme "/toc.html"))
         filename (str (:output-to settings) "/toc.html")
         params (toc-template-parameters parsed-sources project settings)]
     (spit filename (mustache/render toc-template params))))
@@ -63,7 +64,7 @@
 (defn render-ns
   "Render the page for one namespace."
   [parsed-source project settings theme]
-  (let [toc-template (slurp (str theme "/ns.html"))
+  (let [toc-template (fs/slurp-resource (str theme "/ns.html"))
         filename (str (:output-to settings) "/" (:ns parsed-source) ".html")
         params (ns-template-parameters parsed-source project settings)]
     (spit filename (mustache/render toc-template params))))
@@ -71,12 +72,11 @@
 (defn copy-resources
   "Copy resources from theme to docs folder."
   [settings theme]
-  (let [theme-css (str theme "/css")
-        theme-js (str theme "/js")
-        output-css (str (:output-to settings) "/css")
-        output-js (str (:output-to settings) "/js")]
-    (when (fs/dir? theme-js) (fs/copy-all theme-js output-js))
-    (when (fs/dir? theme-css) (fs/copy-all theme-css output-css))))
+  (dorun
+    (map #(fs/spit-resource % theme (:output-to settings))
+         (:resources
+           (edn/read-string
+             (fs/slurp-resource (str theme "/theme.edn")))))))
 
 (defn render
   "Render the documentation."
@@ -84,5 +84,5 @@
   (let [theme (find-theme (:theme settings))]
     (copy-resources settings theme)
     (render-toc parsed-sources project settings theme)
-    (map #(render-ns % project settings theme) parsed-sources)))
+    (dorun (map #(render-ns % project settings theme) parsed-sources))))
 

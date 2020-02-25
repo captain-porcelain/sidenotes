@@ -1,0 +1,9 @@
+{:resources
+["css/shCore.css"
+ "css/shThemeMarginalia.css"
+ "css/marginalia.css"
+ "js/jquery-1.7.1.min.js"
+ "js/xregexp-min.js"
+ "js/shCore.js"
+ "js/shBrushClojure.js"
+ "js/app.js"]}
