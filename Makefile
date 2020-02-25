@@ -22,5 +22,5 @@ outdated:
 		clojure -A:outdated
 
 publish:
-		clojure -A:publish
+		clojure -A:publish deploy target/sidenotes-$(VERSION).jar
 
