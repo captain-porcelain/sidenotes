@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" content="text/html" http-equiv="Content-Type" />
+		<meta content="Clojure documentation generator" name="description" />
+		<title>Sidenotes</title>
+ 		<link rel="stylesheet" type="text/css" href="css/shCore.css" />
+		<style type="text/css">.syntaxhighlighter{overflow:hidden !important;}</style>
+		<link rel="stylesheet" type="text/css" href="css/shThemeMarginalia.css" />
+		<link rel="stylesheet" type="text/css" href="css/marginalia.css" />
+		<script type="text/javascript" src="js/jquery-1.7.1.min.js"></script>
+		<script type="text/javascript" src="js/xregexp-min.js"></script>
+		<script type="text/javascript" src="js/shCore.js"></script>
+		<script type="text/javascript" src="js/shBrushClojure.js"></script>
+	</head>
+	<body>
+		<table>
+			<tr>
+				<td class="docs">
+					<div class="docs-header">
+						<a class="anchor" href="#repl" name="repl">
+							<h1 class="project-name">sidenotes.fs</h1>
+							<a class="toc-link" href="toc.html">toc</a>
+						</a>
+					</div>
+				</td>
+				<td class="codes" />
+			</tr>
+			<tr>
+				<td class="docs">
+					
+				</td>
+				<td class="codes">
+					<pre class="brush: clojure">(ns sidenotes.fs
+  (:require
+    [clojure.string :as string]
+    [clojure.java.io :as io]))</pre>
+				</td>
+			</tr>
+			<tr>
+				<td class="docs">
+					<p>Check if the given path points to an existing file.</p>
+				</td>
+				<td class="codes">
+					<pre class="brush: clojure">(defn file?
+  [path]
+  (let [file (java.io.File. path)]
+    (and (.exists file) (.isFile file))))</pre>
+				</td>
+			</tr>
+			<tr>
+				<td class="docs">
+					<p>Performs roughly the same task as the UNIX <code>ls</code>.  That is, returns a seq of the filenames  at a given directory.  If a path to a file is supplied, then the seq contains only the  original path given.</p>
+				</td>
+				<td class="codes">
+					<pre class="brush: clojure">(defn ls
+  [path]
+  (let [file (java.io.File. path)]
+    (if (.isDirectory file)
+      (seq (.list file))
+      (when (.exists file)
+        [path]))))</pre>
+				</td>
+			</tr>
+			<tr>
+				<td class="docs">
+					<p>Create a directory for the given path.</p>
+				</td>
+				<td class="codes">
+					<pre class="brush: clojure">(defn mkdir
+  [path]
+  (.mkdirs (io/file path)))</pre>
+				</td>
+			</tr>
+			<tr>
+				<td class="docs">
+					<p>Ensure that the directory specified by <code>path</code> exists.  If not then make it so.  Here is a snowman ☃</p>
+				</td>
+				<td class="codes">
+					<pre class="brush: clojure">(defn ensure-directory!
+  [path]
+  (when-not (ls path)
+    (mkdir path)))</pre>
+				</td>
+			</tr>
+			<tr>
+				<td class="docs">
+					<p>Many Marginalia fns use dir? to recursively search a filepath.</p>
+				</td>
+				<td class="codes">
+					<pre class="brush: clojure">(defn dir?
+  [path]
+  (.isDirectory (java.io.File. path)))</pre>
+				</td>
+			</tr>
+			<tr>
+				<td class="docs">
+					<p>Returns a string containing the files extension.</p>
+				</td>
+				<td class="codes">
+					<pre class="brush: clojure">(defn find-file-extension
+  [^java.io.File file]
+  (second (re-find #&quot;\\.([^.]+)\$&quot; (.getName file))))</pre>
+				</td>
+			</tr>
+			<tr>
+				<td class="docs">
+					<p>Predicate. Returns true for "normal" files with a file extension which passes the provided predicate.</p>
+				</td>
+				<td class="codes">
+					<pre class="brush: clojure">(defn processable-file?
+  [pred ^java.io.File file]
+  (when (.isFile file)
+    (-&gt; file find-file-extension pred)))</pre>
+				</td>
+			</tr>
+			<tr>
+				<td class="docs">
+					<p>Returns a seq of processable file paths (strings) in alphabetical order by namespace.</p>
+				</td>
+				<td class="codes">
+					<pre class="brush: clojure">(defn find-processable-file-paths
+  [dir pred]
+  (-&gt;&gt; (io/file dir)
+       (file-seq)
+       (filter (partial processable-file? pred))
+       (sort)
+       (map #(.getCanonicalPath %))))</pre>
+				</td>
+			</tr>
+			<tr>
+				<td class="docs">
+					
+				</td>
+				<td class="codes">
+					<pre class="brush: clojure">(def ^:private file-extensions #{&quot;clj&quot; &quot;cljs&quot; &quot;cljx&quot; &quot;cljc&quot;})</pre>
+				</td>
+			</tr>
+			<tr>
+				<td class="docs">
+					<p>Given a collection of filepaths, returns a lazy sequence of filepaths to all  .clj, .cljs, .cljx, and .cljc files on those paths: directory paths will be searched  recursively for files.</p>
+				</td>
+				<td class="codes">
+					<pre class="brush: clojure">(defn find-sources
+  [sources]
+  (if (nil? sources)
+    (find-processable-file-paths &quot;./src&quot; file-extensions)
+    (-&gt;&gt; sources
+         (mapcat #(if (dir? %)
+                    (find-processable-file-paths % file-extensions)
+                    [(.getCanonicalPath (io/file %))])))))</pre>
+				</td>
+			</tr>
+			<tr>
+				<td class="docs">
+					<p>Stolen from leiningen</p>
+				</td>
+				<td class="codes">
+					<pre class="brush: clojure">(defn slurp-resource
+  [resource-name]
+  (try
+    (-&gt; (.getContextClassLoader (Thread/currentThread))
+        (.getResourceAsStream resource-name)
+        (java.io.InputStreamReader.)
+        (slurp))
+    (catch java.lang.NullPointerException npe
+      (println (str &quot;Could not locate resources at &quot; resource-name))
+      (println &quot;    ... attempting to fix.&quot;)
+      (let [resource-name resource-name]
+        (try
+          (-&gt; (.getContextClassLoader (Thread/currentThread))
+              (.getResourceAsStream resource-name)
+              (java.io.InputStreamReader.)
+              (slurp))
+          (catch java.lang.NullPointerException npe
+            (println (str &quot;    STILL could not locate resources at &quot; resource-name &quot;. Giving up!&quot;))))))))</pre>
+				</td>
+			</tr>
+			<tr>
+				<td class="docs">
+					<p>Load a resource and spit it to the output folder.</p>
+				</td>
+				<td class="codes">
+					<pre class="brush: clojure">(defn spit-resource
+  [resource from to]
+  (ensure-directory! (str to &quot;/&quot; (string/join &quot;/&quot; (butlast (string/split resource #&quot;/&quot;)))))
+  (spit (str to &quot;/&quot; resource) (slurp-resource (str from &quot;/&quot; resource))))</pre>
+				</td>
+			</tr>
+			<tr>
+				<td class="spacer docs">&nbsp;</td>
+				<td class="codes" />
+			</tr>
+		</table>
+		<div class="footer">Generated by <a href="https://github.com/captain-porcelain/sidenotes">Sidenotes</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a>
+		</div>
+		<script type="text/javascript" src="js/app.js"></script>
+	</body>
+</html>
