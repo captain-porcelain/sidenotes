@@ -1,5 +1,6 @@
 (ns sidenotes.fs
   (:require
+    [clojure.string :as string]
     [clojure.java.io :as io]))
 
 (defn file?
@@ -72,8 +73,28 @@
                     (find-processable-file-paths % file-extensions)
                     [(.getCanonicalPath (io/file %))])))))
 
-(defn copy-all
-  "Copy all files from one directory to another."
-  [from to]
-  (ensure-directory! to)
-  (dorun (map #(io/copy (io/file (str from "/" %)) (io/file (str to "/" %))) (ls from))))
+(defn slurp-resource
+  "Stolen from leiningen"
+  [resource-name]
+  (try
+    (-> (.getContextClassLoader (Thread/currentThread))
+        (.getResourceAsStream resource-name)
+        (java.io.InputStreamReader.)
+        (slurp))
+    (catch java.lang.NullPointerException npe
+      (println (str "Could not locate resources at " resource-name))
+      (println "    ... attempting to fix.")
+      (let [resource-name resource-name]
+        (try
+          (-> (.getContextClassLoader (Thread/currentThread))
+              (.getResourceAsStream resource-name)
+              (java.io.InputStreamReader.)
+              (slurp))
+          (catch java.lang.NullPointerException npe
+            (println (str "    STILL could not locate resources at " resource-name ". Giving up!"))))))))
+
+(defn spit-resource
+  "Load a resource and spit it to the output folder."
+  [resource from to]
+  (ensure-directory! (str to "/" (string/join "/" (butlast (string/split resource #"/")))))
+  (spit (str to "/" resource) (slurp-resource (str from "/" resource))))

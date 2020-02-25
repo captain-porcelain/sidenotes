@@ -3,6 +3,9 @@ build: repl
 clean:
 		rm -rf target/
 
+package:
+		clojure -A:cambada -m cambada.uberjar -m sidenotes.core -a sidenotes.core
+
 tests:
 		clojure -A:test -m kaocha.runner
 
@@ -14,3 +17,6 @@ repl:
 
 outdated:
 		clojure -A:outdated
+
+publish:
+		clojure -A:publish
