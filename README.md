@@ -51,4 +51,4 @@ in your project root. It can also be used to add a project name and description.
 
 - Fall back to project folder for project name when not set in sidenotes.edn
 - Add second theme that is more colorful
-- Enable 
+- Enable external themes
