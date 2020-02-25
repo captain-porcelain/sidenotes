@@ -2,6 +2,8 @@
 
 A clojure documentation generator forked from [marginalia](https://github.com/gdeer81/marginalia/).
 
+The documentation for sidenotes itself can be found [here](https://captain-porcelain.github.io/sidenotes/toc.html)
+
 ## Features
 
 It is limited to projects that use deps.edn.
