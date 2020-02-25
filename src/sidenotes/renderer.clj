@@ -14,7 +14,7 @@
 
 
 (defn transform-dependency
-  "Transform a dependency so mustache can handle it. ![alt](https://raw.githubusercontent.com/adam-p/markdown-here/master/src/common/images/icon48.png)"
+  "Transform a dependency so mustache can handle it."
   [dep]
   {:name (first dep)
    :is-mvn (not (nil? (:mvn/version (second dep))))
