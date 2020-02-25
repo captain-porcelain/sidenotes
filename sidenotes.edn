@@ -1,3 +1,4 @@
 {:projectname "Sidenotes"
  :description "Clojure documentation generator"
- :output-to "docs"}
+ :output-to "docs"
+ :theme "marginalia"}
