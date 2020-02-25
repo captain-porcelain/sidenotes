@@ -1,10 +1,13 @@
+VERSION=$(shell cat version)
+
 build: repl
 
 clean:
+		rm -rf pom.xml
 		rm -rf target/
 
 package:
-		clojure -A:cambada -m cambada.uberjar -m sidenotes.core -a sidenotes.core
+		clojure -A:cambada -m cambada.jar -m sidenotes.core -a sidenotes.core --app-version $(VERSION)
 
 tests:
 		clojure -A:test -m kaocha.runner
@@ -20,3 +23,4 @@ outdated:
 
 publish:
 		clojure -A:publish
+
