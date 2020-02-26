@@ -22,10 +22,9 @@
     {:deps [] :paths []}))
 
 ;; The default settings write the documentation with the marginalia theme to
-;; the docs folder. And prompts for project name and description too.
+;; the docs folder. And prompts for project description too.
 (def default-settings
-  {:projectname "Add name in sidenotes.edn..."
-   :description "Add description in sidenotes.edn..."
+  {:description "Add description in sidenotes.edn..."
    :output-to "docs"
    :theme "marginalia"})
 
@@ -39,7 +38,8 @@
 (defn load-settings
   "Merge the settings from a config file with the defaults to fill in missing bits."
   [file]
-  (let [settings (merge default-settings (read-settings file))
+  (let [fallback {:projectname (fs/project-folder)}
+        settings (merge default-settings fallback (read-settings file))
         tmp (fs/ensure-directory! (:output-to settings))]
     settings))
 

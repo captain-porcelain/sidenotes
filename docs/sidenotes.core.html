@@ -43,12 +43,11 @@
     {:deps [] :paths []}))</pre>
 			</div>
 			<div class="box section">
-				<p>The default settings write the documentation with the marginalia theme to the docs folder. And prompts for project name and description too.</p>
+				<p>The default settings write the documentation with the marginalia theme to the docs folder. And prompts for project description too.</p>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(def default-settings
-  {:projectname &quot;Add name in sidenotes.edn...&quot;
-   :description &quot;Add description in sidenotes.edn...&quot;
+  {:description &quot;Add description in sidenotes.edn...&quot;
    :output-to &quot;docs&quot;
    :theme &quot;marginalia&quot;})</pre>
 			</div>
@@ -68,7 +67,8 @@
 			<div class="box section">
 				<pre class="brush: clojure">(defn load-settings
   [file]
-  (let [settings (merge default-settings (read-settings file))
+  (let [fallback {:projectname (fs/project-folder)}
+        settings (merge default-settings fallback (read-settings file))
         tmp (fs/ensure-directory! (:output-to settings))]
     settings))</pre>
 			</div>
