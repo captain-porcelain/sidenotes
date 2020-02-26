@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" content="text/html" http-equiv="Content-Type" />
+		<meta content="Clojure documentation generator" name="description" />
+		<title>Sidenotes</title>
+		<link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">
+		<link rel="stylesheet" type="text/css" href="css/sidenotes.css" />
+ 		<link rel="stylesheet" type="text/css" href="css/shCore.css" />
+		<link rel="stylesheet" type="text/css" href="css/shThemeSidenotes.css" />
+		<style type="text/css">.syntaxhighlighter{overflow:hidden !important;}</style>
+		<script type="text/javascript" src="js/jquery-1.7.1.min.js"></script>
+		<script type="text/javascript" src="js/xregexp-min.js"></script>
+		<script type="text/javascript" src="js/shCore.js"></script>
+		<script type="text/javascript" src="js/shBrushClojure.js"></script>
+	</head>
+	<body>
+		<div class="gridlayout">
+			<div class="box header">
+				<h1 class="project-name">sidenotes.fs</h1>
+				<a class="toc-link" href="toc.html">table of contents</a>
+			</div>
+			<div class="box section">
+				<p>This namespace contains all the functions we need to handle accessing the filesystem as well as resources inside the project itself.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(ns sidenotes.fs
+  (:require
+    [clojure.string :as string]
+    [clojure.java.io :as io]))</pre>
+			</div>
+			<div class="box section">
+				<p>Check if the given path points to an existing file.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn file?
+  [path]
+  (let [file (java.io.File. path)]
+    (and (.exists file) (.isFile file))))</pre>
+			</div>
+			<div class="box section">
+				<p>Performs roughly the same task as the UNIX <code>ls</code>.  That is, returns a seq of the filenames  at a given directory.  If a path to a file is supplied, then the seq contains only the  original path given.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn ls
+  [path]
+  (let [file (java.io.File. path)]
+    (if (.isDirectory file)
+      (seq (.list file))
+      (when (.exists file)
+        [path]))))</pre>
+			</div>
+			<div class="box section">
+				<p>Create a directory for the given path.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn mkdir
+  [path]
+  (.mkdirs (io/file path)))</pre>
+			</div>
+			<div class="box section">
+				<p>Ensure that the directory specified by <code>path</code> exists.  If not then make it so.  Here is a snowman ☃</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn ensure-directory!
+  [path]
+  (when-not (ls path)
+    (mkdir path)))</pre>
+			</div>
+			<div class="box section">
+				<p>Many Marginalia fns use dir? to recursively search a filepath.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn dir?
+  [path]
+  (.isDirectory (java.io.File. path)))</pre>
+			</div>
+			<div class="box section">
+				<p>Returns a string containing the files extension.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn find-file-extension
+  [^java.io.File file]
+  (second (re-find #&quot;\\.([^.]+)\$&quot; (.getName file))))</pre>
+			</div>
+			<div class="box section">
+				<p>Predicate. Returns true for "normal" files with a file extension which passes the provided predicate.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn processable-file?
+  [pred ^java.io.File file]
+  (when (.isFile file)
+    (-&gt; file find-file-extension pred)))</pre>
+			</div>
+			<div class="box section">
+				<p>Returns a seq of processable file paths (strings) in alphabetical order by namespace.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn find-processable-file-paths
+  [dir pred]
+  (-&gt;&gt; (io/file dir)
+       (file-seq)
+       (filter (partial processable-file? pred))
+       (sort)
+       (map #(.getCanonicalPath %))))</pre>
+			</div>
+			<div class="box section">
+				
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(def ^:private file-extensions #{&quot;clj&quot; &quot;cljs&quot; &quot;cljx&quot; &quot;cljc&quot;})</pre>
+			</div>
+			<div class="box section">
+				<p>Given a collection of filepaths, returns a lazy sequence of filepaths to all  .clj, .cljs, .cljx, and .cljc files on those paths: directory paths will be searched  recursively for files.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn find-sources
+  [sources]
+  (if (nil? sources)
+    (find-processable-file-paths &quot;./src&quot; file-extensions)
+    (-&gt;&gt; sources
+         (mapcat #(if (dir? %)
+                    (find-processable-file-paths % file-extensions)
+                    [(.getCanonicalPath (io/file %))])))))</pre>
+			</div>
+			<div class="box section">
+				<p>Try to find the readme file.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn find-readme
+  []
+  (first (filter #(.startsWith (string/lower-case %) &quot;readme&quot;) (ls &quot;.&quot;))))</pre>
+			</div>
+			<div class="box section">
+				<p>Load the readme file if possible.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn load-readme
+  []
+  (let [readme (find-readme)]
+    (if (nil? readme)
+      {:has-readme false}
+      {:has-readme true
+       :file readme
+       :type (string/lower-case (find-file-extension (io/file readme)))
+       :content (slurp readme)})))</pre>
+			</div>
+			<div class="box section">
+				<p>Find the name of the project from current folder.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn project-folder
+  []
+  (last (clojure.string/split (str (io/as-url (io/file &quot;&quot;))) #&quot;/&quot;)))</pre>
+			</div>
+			<div class="box section">
+				<p>Stolen from leiningen</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn slurp-resource
+  [resource-name]
+  (try
+    (-&gt; (.getContextClassLoader (Thread/currentThread))
+        (.getResourceAsStream resource-name)
+        (java.io.InputStreamReader.)
+        (slurp))
+    (catch java.lang.NullPointerException npe
+      (println (str &quot;Could not locate resources at &quot; resource-name))
+      (println &quot;    ... attempting to fix.&quot;)
+      (let [resource-name resource-name]
+        (try
+          (-&gt; (.getContextClassLoader (Thread/currentThread))
+              (.getResourceAsStream resource-name)
+              (java.io.InputStreamReader.)
+              (slurp))
+          (catch java.lang.NullPointerException npe
+            (println (str &quot;    STILL could not locate resources at &quot; resource-name &quot;. Giving up!&quot;))))))))</pre>
+			</div>
+			<div class="box section">
+				<p>Load a resource and spit it to the output folder.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn spit-resource
+  [resource from to]
+  (ensure-directory! (str to &quot;/&quot; (string/join &quot;/&quot; (butlast (string/split resource #&quot;/&quot;)))))
+  (spit (str to &quot;/&quot; resource) (slurp-resource (str from &quot;/&quot; resource))))</pre>
+			</div>
+			<div class="box footer">
+				Generated by <a href="https://github.com/captain-porcelain/sidenotes">Sidenotes</a>.
+				&nbsp;&nbsp;
+				Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a>
+			</div>
+		</div>
+		<script type="text/javascript" src="js/app.js"></script>
+	</body>
+</html>

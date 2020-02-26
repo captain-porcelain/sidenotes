@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" content="text/html" http-equiv="Content-Type" />
+		<meta content="Clojure documentation generator" name="description" />
+		<title>Sidenotes</title>
+		<link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">
+		<link rel="stylesheet" type="text/css" href="css/sidenotes.css" />
+ 		<link rel="stylesheet" type="text/css" href="css/shCore.css" />
+		<link rel="stylesheet" type="text/css" href="css/shThemeSidenotes.css" />
+		<style type="text/css">.syntaxhighlighter{overflow:hidden !important;}</style>
+		<script type="text/javascript" src="js/jquery-1.7.1.min.js"></script>
+		<script type="text/javascript" src="js/xregexp-min.js"></script>
+		<script type="text/javascript" src="js/shCore.js"></script>
+		<script type="text/javascript" src="js/shBrushClojure.js"></script>
+	</head>
+	<body>
+		<div class="gridlayout">
+			<div class="box header">
+				<h1 class="project-name">sidenotes.renderer</h1>
+				<a class="toc-link" href="toc.html">table of contents</a>
+			</div>
+			<div class="box section">
+				<p>The renderer is responsible for converting parsed contents into html files. It uses clostache templates from a selectable theme folder to create them.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(ns sidenotes.renderer
+  (:require
+    [sidenotes.fs :as fs]
+    [markdown.core :as md]
+    [clojure.edn :as edn]
+    [clostache.parser :as mustache]))</pre>
+			</div>
+			<div class="box section">
+				
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(def theme-base &quot;themes/&quot;)</pre>
+			</div>
+			<div class="box section">
+				<p>Find and the path to the used theme.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn find-theme
+  [theme-name]
+  (str theme-base theme-name))</pre>
+			</div>
+			<div class="box section">
+				<p>Transform a dependency so mustache can handle it.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn transform-dependency
+  [dep]
+  {:name (first dep)
+   :is-mvn (not (nil? (:mvn/version (second dep))))
+   :version (:mvn/version (second dep))
+   :is-git (not (nil? (:git/url (second dep))))
+   :url (:git/url (second dep))
+   :sha (:sha (second dep))})</pre>
+			</div>
+			<div class="box section">
+				<p>Transform the list of dependencies for mustache.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn transform-dependencies
+  [deps]
+  (map transform-dependency deps))</pre>
+			</div>
+			<div class="box section">
+				<p>Transform the comments and parse contained markdown.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn transform-section
+  [section]
+  (assoc section :docstring (md/md-to-html-string (:docstring section))))</pre>
+			</div>
+			<div class="box section">
+				<p>Transform the comments and parse contained markdown.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn transform-parsed-source
+  [parsed-source]
+  (assoc parsed-source :sections (map transform-section (:sections parsed-source))))</pre>
+			</div>
+			<div class="box section">
+				<p>Check if a readme exists and contains markdown. If so convert it to html.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn transform-readme
+  [readme]
+  (if (and (:has-readme readme) (= &quot;md&quot; (:type readme)))
+    (assoc readme :html (md/md-to-html-string (:content readme)))
+    readme))</pre>
+			</div>
+			<div class="box section">
+				<p>Build the parameters for the mustache templates.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn toc-template-parameters
+  [parsed-sources project settings readme]
+  {:settings settings
+   :dependencies (transform-dependencies (:deps project))
+   :readme (transform-readme readme)
+   :sources parsed-sources})</pre>
+			</div>
+			<div class="box section">
+				<p>Build the parameters for the mustache templates.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn ns-template-parameters
+  [parsed-source project settings]
+  {:settings settings
+   :dependencies (transform-dependencies (:deps project))
+   :source (transform-parsed-source parsed-source)})</pre>
+			</div>
+			<div class="box section">
+				<p>Render the table of contents.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn render-toc
+  [parsed-sources project settings readme theme]
+  (let [toc-template (fs/slurp-resource (str theme &quot;/toc.html&quot;))
+        filename (str (:output-to settings) &quot;/toc.html&quot;)
+        params (toc-template-parameters parsed-sources project settings readme)]
+    (spit filename (mustache/render toc-template params))))</pre>
+			</div>
+			<div class="box section">
+				<p>Render the page for one namespace.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn render-ns
+  [parsed-source project settings theme]
+  (let [toc-template (fs/slurp-resource (str theme &quot;/ns.html&quot;))
+        filename (str (:output-to settings) &quot;/&quot; (:ns parsed-source) &quot;.html&quot;)
+        params (ns-template-parameters parsed-source project settings)]
+    (spit filename (mustache/render toc-template params))))</pre>
+			</div>
+			<div class="box section">
+				<p>Copy resources from theme to docs folder.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn copy-resources
+  [settings theme]
+  (dorun
+    (map #(fs/spit-resource % theme (:output-to settings))
+         (:resources
+           (edn/read-string
+             (fs/slurp-resource (str theme &quot;/theme.edn&quot;)))))))</pre>
+			</div>
+			<div class="box section">
+				<p>Render the documentation.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn render
+  [parsed-sources project settings readme]
+  (let [theme (find-theme (:theme settings))]
+    (copy-resources settings theme)
+    (render-toc parsed-sources project settings readme theme)
+    (dorun (map #(render-ns % project settings theme) parsed-sources))))</pre>
+			</div>
+			<div class="box footer">
+				Generated by <a href="https://github.com/captain-porcelain/sidenotes">Sidenotes</a>.
+				&nbsp;&nbsp;
+				Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a>
+			</div>
+		</div>
+		<script type="text/javascript" src="js/app.js"></script>
+	</body>
+</html>
