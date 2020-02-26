@@ -22,11 +22,11 @@
 :main-opts  &#91;&quot;-m&quot; &quot;sidenotes.core&quot;&#93;}
 </code></pre><p>and call it</p><pre><code class="bash">clojure -A:sidenotes
 
-</code></pre><p>This will create the documentation in a folder called docs. You can change this by creating a file sidenotes.edn in your project root. It can also be used to add a project name and description.</p><pre><code class="clojure">{:projectname &quot;Sidenotes&quot;
+</code></pre><p>This will create the documentation in a folder called docs. You can change this by creating a file sidenotes.edn in your project root. It can also be used to add a project name and description. The project name is otherwise read for the current folder.</p><pre><code class="clojure">{:projectname &quot;Sidenotes&quot;
  :description &quot;Clojure documentation generator&quot;
  :output-to &quot;docs&quot;
  :theme &quot;marginalia or sidenotes&quot;}
-</code></pre><h2>Future Work</h2><ul><li>Fall back to project folder for project name when not set in sidenotes.edn</li><li>Enable external themes</li></ul></div>
+</code></pre><h2>Future Work</h2><ul><li>Enable external themes</li></ul></div>
 			<div class="box subheader">
 				<h3>Dependencies</h3>
 			</div>
