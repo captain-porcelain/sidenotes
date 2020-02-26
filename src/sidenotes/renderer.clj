@@ -1,3 +1,5 @@
+;; The renderer is responsible for converting parsed contents into html files.
+;; It uses clostache templates from a selectable theme folder to create them.
 (ns sidenotes.renderer
   (:require
     [sidenotes.fs :as fs]
@@ -38,11 +40,19 @@
   [parsed-source]
   (assoc parsed-source :sections (map transform-section (:sections parsed-source))))
 
+(defn transform-readme
+  "Check if a readme exists and contains markdown. If so convert it to html."
+  [readme]
+  (if (and (:has-readme readme) (= "md" (:type readme)))
+    (assoc readme :html (md/md-to-html-string (:content readme)))
+    readme))
+
 (defn toc-template-parameters
   "Build the parameters for the mustache templates."
-  [parsed-sources project settings]
+  [parsed-sources project settings readme]
   {:settings settings
    :dependencies (transform-dependencies (:deps project))
+   :readme (transform-readme readme)
    :sources parsed-sources})
 
 (defn ns-template-parameters
@@ -55,10 +65,10 @@
 
 (defn render-toc
   "Render the table of contents."
-  [parsed-sources project settings theme]
+  [parsed-sources project settings readme theme]
   (let [toc-template (fs/slurp-resource (str theme "/toc.html"))
         filename (str (:output-to settings) "/toc.html")
-        params (toc-template-parameters parsed-sources project settings)]
+        params (toc-template-parameters parsed-sources project settings readme)]
     (spit filename (mustache/render toc-template params))))
 
 (defn render-ns
@@ -80,9 +90,9 @@
 
 (defn render
   "Render the documentation."
-  [parsed-sources project settings]
+  [parsed-sources project settings readme]
   (let [theme (find-theme (:theme settings))]
     (copy-resources settings theme)
-    (render-toc parsed-sources project settings theme)
+    (render-toc parsed-sources project settings readme theme)
     (dorun (map #(render-ns % project settings theme) parsed-sources))))
 

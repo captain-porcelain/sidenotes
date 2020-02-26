@@ -1,6 +1,9 @@
 ;; This file contains the complete Marginalia parser.
 ;; It leverages the Clojure reader instead of implementing a complete
 ;; Clojure parsing solution.
+;;
+;; And seems to be in need of some more documentation and cleanup for
+;; readability.
 (ns sidenotes.parser
   "Provides the parsing facilities for Marginalia."
   (:require [clojure.java.io :as io])

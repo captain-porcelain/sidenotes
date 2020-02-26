@@ -1,3 +1,5 @@
+;; This namespace contains all the functions we need to handle accessing the filesystem as well as
+;; resources inside the project itself.
 (ns sidenotes.fs
   (:require
     [clojure.string :as string]
@@ -72,6 +74,27 @@
          (mapcat #(if (dir? %)
                     (find-processable-file-paths % file-extensions)
                     [(.getCanonicalPath (io/file %))])))))
+
+(defn find-readme
+  "Try to find the readme file."
+  []
+  (first (filter #(.startsWith (string/lower-case %) "readme") (ls "."))))
+
+(defn load-readme
+  "Load the readme file if possible."
+  []
+  (let [readme (find-readme)]
+    (if (nil? readme)
+      {:has-readme false}
+      {:has-readme true
+       :file readme
+       :type (string/lower-case (find-file-extension (io/file readme)))
+       :content (slurp readme)})))
+
+(defn project-folder
+  "Find the name of the project from current folder."
+  []
+  (last (clojure.string/split (str (io/as-url (io/file ""))) #"/")))
 
 (defn slurp-resource
   "Stolen from leiningen"

@@ -1,4 +1,8 @@
 /**
+ * SyntaxHighlighter
+ * http://alexgorbatchev.com/SyntaxHighlighter
+ *
+ * SyntaxHighlighter is donationware. If you are using it, please donate.
  * http://alexgorbatchev.com/SyntaxHighlighter/donate.html
  *
  * @version
@@ -53,7 +57,7 @@
   color: #3f5fbf !important;
 }
 .syntaxhighlighter.collapsed .toolbar a:hover {
-  color: #aa7700 !important;
+  color: #31af00 !important;
 }
 .syntaxhighlighter .toolbar {
   color: #a0a0a0 !important;
@@ -82,7 +86,7 @@
   color: #646464 !important;
 }
 .syntaxhighlighter .variable {
-  color: #aa7700 !important;
+  color: #31af00 !important;
 }
 .syntaxhighlighter .value {
   color: #009900 !important;
@@ -108,6 +112,9 @@
   color: red !important;
 }
 
+.syntaxhighlighter .keyword {
+  font-weight: bold !important;
+}
 .syntaxhighlighter .xml .keyword {
   color: #3f7f7f !important;
   font-weight: normal !important;
@@ -119,39 +126,3 @@
   font-style: italic !important;
   color: #2a00ff !important;
 }
-
-.clojure.syntaxhighlighter .invalid { 
-   background-color: #FAA !important;
-}
-
-.clojure.syntaxhighlighter .quoted {      
-    font-style: italic !important;
-}
-
-.syntaxhighlighter .clojure.variable,
-.syntaxhighlighter .clojure.symbol,
-.syntaxhighlighter .clojure.value
-{
-    color: #006060 !important;
-}
-
-.syntaxhighlighter .clojure.string {
-    color: #55B !important;
-}
-
-.syntaxhighlighter .clojure.functions {
-    color: black !important;
-}
-
-.syntaxhighlighter .clojure.color1 {
-    color: #666 !important;
-}
-
-.syntaxhighlighter .clojure.color3 {
-    color: #900 !important;
-}
-
-.syntaxhighlighter .clojure.constants {
-    color: #1A734D !important;
-}
-
