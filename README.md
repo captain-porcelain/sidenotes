@@ -42,7 +42,8 @@ clojure -A:sidenotes
 ```
 
 This will create the documentation in a folder called docs. You can change this by creating a file sidenotes.edn
-in your project root. It can also be used to add a project name and description.
+in your project root. It can also be used to add a project name and description. The project name is otherwise
+read for the current folder.
 
 ```clojure
 {:projectname "Sidenotes"
@@ -53,5 +54,4 @@ in your project root. It can also be used to add a project name and description.
 
 ## Future Work
 
-- Fall back to project folder for project name when not set in sidenotes.edn
 - Enable external themes
