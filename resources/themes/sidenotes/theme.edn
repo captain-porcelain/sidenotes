@@ -1,7 +1,7 @@
 {:resources
- ["css/shCore.css"
-  "css/shThemeMarginalia.css"
-  "css/marginalia.css"
+ ["css/sidenotes.css"
+  "css/shCore.css"
+  "css/shThemeSidenotes.css"
   "js/jquery-1.7.1.min.js"
   "js/xregexp-min.js"
   "js/shCore.js"

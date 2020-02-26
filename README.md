@@ -1,6 +1,6 @@
-# Sidenodes
+# Sidenotes
 
-A clojure documentation generator forked from [marginalia](https://github.com/gdeer81/marginalia/).
+A clojure documentation generator forked from [marginalia](https://github.com/gdeer81/marginalia/)
 
 The documentation for sidenotes itself can be found [here](https://captain-porcelain.github.io/sidenotes/toc.html)
 
@@ -19,7 +19,9 @@ In the current early version the following features are supported:
 - No Latex output
 - No uberdoc output
 - Javascript and CSS are not injected into html files but kept separate
-- Uses clostache/mustache for templating, with support for multiple themes, although only one is implemented yet.
+- Uses clostache/mustache for templating
+- A new theme `sidenotes` in addition to the classic `marginalia`
+- Inclusion of the project readme in the table of contents page if it is written in markdown
 
 ## Usage and Configuration
 
@@ -46,11 +48,10 @@ in your project root. It can also be used to add a project name and description.
 {:projectname "Sidenotes"
  :description "Clojure documentation generator"
  :output-to "docs"
- :theme "marginalia"}
+ :theme "marginalia or sidenotes"}
 ```
 
 ## Future Work
 
 - Fall back to project folder for project name when not set in sidenotes.edn
-- Add second theme that is more colorful
 - Enable external themes
