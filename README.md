@@ -55,3 +55,5 @@ read for the current folder.
 ## Future Work
 
 - Enable external themes
+- Add a setting for inclusion of the readme
+- Add a setting for the toc.html filename, or name it index.html intead
