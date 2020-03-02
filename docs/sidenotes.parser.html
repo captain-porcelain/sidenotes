@@ -25,11 +25,18 @@
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(ns sidenotes.parser
-  (:require [clojure.java.io :as io])
-  (:refer-clojure :exclude [replace])
-  (:use [clojure [string :only (join replace lower-case)]]
-        [cljs.tagged-literals :only [*cljs-data-readers*]]
-        [clojure.tools.namespace :only (read-file-ns-decl)]))</pre>
+  (:require
+    [clojure.string :as string]
+    [clojure.java.io :as io]
+    [clojure.tools.namespace :as ctn]
+    [cljs.tagged-literals :as ctl]))</pre>
+			</div>
+			<div class="box section">
+				
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">====================================================================================================
+Helper functions</pre>
 			</div>
 			<div class="box section">
 				<p>Access to private or protected field.  field-name is a symbol or keyword.</p><p>Extracted from clojure.contrib.reflect</p>
@@ -42,7 +49,7 @@
       (.get obj)))</pre>
 			</div>
 			<div class="box section">
-				<p>Calls a private or protected method.</p><p> params is a vector of classes which correspond to the arguments to  the method e</p><p> obj is nil for static methods, the instance object otherwise.</p><p> The method-name is given a symbol or a keyword (something Named).</p><p>Extracted from clojure.contrib.reflect</p>
+				<p>Calls a private or protected method.</p><p>params is a vector of classes which correspond to the arguments to the method e</p><p>obj is nil for static methods, the instance object otherwise.</p><p>The method-name is given a symbol or a keyword (something Named).</p><p>Extracted from clojure.contrib.reflect</p>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(defn call-method
@@ -56,49 +63,59 @@
 				
 			</div>
 			<div class="box section">
+				<pre class="brush: clojure">====================================================================================================
+Comment Handling</pre>
+			</div>
+			<div class="box section">
+				<p>A simple record for holding comments.</p>
+			</div>
+			<div class="box section">
 				<pre class="brush: clojure">(defrecord Comment [content])</pre>
 			</div>
 			<div class="box section">
-				
+				<p>Attach a method for printing to Comment records.</p>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(defmethod print-method Comment [comment ^String out]
   (.write out (str \\&quot; (.content comment) \\&quot;)))</pre>
 			</div>
 			<div class="box section">
-				
+				<p>Hold comments that are defined at top level.</p>
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(def top-level-comments (atom []))
-(def sub-level-comments (atom []))</pre>
+				<pre class="brush: clojure">(def top-level-comments (atom []))</pre>
+			</div>
+			<div class="box section">
+				<p>Hold comments that are defined inside a form.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(def sub-level-comments (atom []))</pre>
 			</div>
 			<div class="box section">
 				
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(def ^{:dynamic true} *comments* nil)
-(def ^{:dynamic true} *comments-enabled* nil)
 (def ^{:dynamic true} *lift-inline-comments* nil)
 (def ^{:dynamic true} *delete-lifted-comments* nil)</pre>
 			</div>
 			<div class="box section">
-				
+				<p>Remeber if adding comments is currently enabled or disabled.</p>
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(defn comments-enabled?
-  []
-  @*comments-enabled*)</pre>
+				<pre class="brush: clojure">(def comments-enabled?
+  (atom true))</pre>
 			</div>
 			<div class="box section">
-				<p>Marginalia can be given directives in comments.  A directive is a comment  line containing a directive name, in the form <code>;; @DirectiveName</code>.  Directives change the behavior of the parser within the files that contain  them.</p><p> The following directives are defined:</p><ul><li><code>@MargDisable</code> suppresses subsequent comments from the docs<ul><li><code>@MargEnable</code> includes subsequent comments in the docs</li></ul></li></ul>
+				<p>Marginalia can be given directives in comments.  A directive is a comment line containing a directive name, in the form <code>;; @DirectiveName</code>. Directives change the behavior of the parser within the files that contain them.</p><p>The following directives are defined:</p><ul><li><code>@MSidenotesDisable</code> suppresses subsequent comments from the docs</li><li><code>@MSidenotesEnable</code> includes subsequent comments in the docs</li></ul>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(def directives
-  {&quot;MargDisable&quot; (fn [] (swap! *comments-enabled* (constantly false)))
-   &quot;MargEnable&quot;  (fn [] (swap! *comments-enabled* (constantly true)))})</pre>
+  {&quot;SidenotesDisable&quot; (fn [] (swap! comments-enabled? false))
+   &quot;SidenotesEnable&quot;  (fn [] (swap! comments-enabled? true))})</pre>
 			</div>
 			<div class="box section">
-				<p>If the given line is a directive, applies it.  Returns a value  indicating whether the line should be included in the comments  list.</p>
+				<p>If the given line is a directive, applies it.  Returns a value indicating whether the line should be included in the comments list.</p>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(defn process-directive!
@@ -111,7 +128,7 @@
     (not directive)))</pre>
 			</div>
 			<div class="box section">
-				
+				<p>Read a comment from the reader.</p>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(defn read-comment
@@ -125,7 +142,7 @@
            (let [line (dec (.getLineNumber reader))
                  text (.toString sb)
                  include? (process-directive! text)]
-             (when (and include? (comments-enabled?))
+             (when (and include? @comments-enabled?)
                (swap! *comments* conj {:form (Comment. text)
                                        :text [text]
                                        :start line
@@ -138,13 +155,34 @@
    (read-comment reader semicolon)))</pre>
 			</div>
 			<div class="box section">
-				
+				<p>Set the given reader as handler for lines starting with ;</p>
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(defn set-comment-reader [reader]
+				<pre class="brush: clojure">(defn set-comment-reader
+  [reader]
   (aset (get-field clojure.lang.LispReader :macros nil)
         (int \\;)
         reader))</pre>
+			</div>
+			<div class="box section">
+				<p>Skip forward until something besides a comment or whitespace shows up.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn skip-spaces-and-comments
+  [rdr]
+  (loop [c (.read rdr)]
+    (cond (= c -1) nil
+          (= (char c) \\;) (do (read-comment rdr \\;)
+                              (recur (.read rdr)))
+          (#{\\space \\tab \\return \\newline \\,} (char c)) (recur (.read rdr))
+          :else (.unread rdr c))))</pre>
+			</div>
+			<div class="box section">
+				
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">====================================================================================================
+Keyword Handling</pre>
 			</div>
 			<div class="box section">
 				
@@ -190,7 +228,7 @@
                  nil s)))</pre>
 			</div>
 			<div class="box section">
-				
+				<p>Read a keyword from reader.</p>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(defn read-keyword
@@ -207,10 +245,11 @@
    (read-keyword reader colon)))</pre>
 			</div>
 			<div class="box section">
-				
+				<p>Set the given reader as handler for keywords.</p>
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(defn set-keyword-reader [reader]
+				<pre class="brush: clojure">(defn set-keyword-reader
+  [reader]
   (aset (get-field clojure.lang.LispReader :macros nil)
         (int \\:)
         reader))</pre>
@@ -219,103 +258,149 @@
 				
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(defn skip-spaces-and-comments [rdr]
-  (loop [c (.read rdr)]
-    (cond (= c -1) nil
-          (= (char c) \\;)
-          (do (read-comment rdr \\;)
-              (recur (.read rdr)))
-          (#{\\space \\tab \\return \\newline \\,} (char c))
-          (recur (.read rdr))
-          :else (.unread rdr c))))</pre>
+				<pre class="brush: clojure">====================================================================================================
+Handling of parsed forms</pre>
 			</div>
 			<div class="box section">
-				
+				<p>Check if two sections are adjacent.</p>
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(declare adjacent?)
-(declare merge-comments)</pre>
+				<pre class="brush: clojure">(defn adjacent?
+  [f s]
+  (= (-&gt; f :end) (-&gt; s :start dec)))</pre>
 			</div>
 			<div class="box section">
-				
+				<p>Convert a section to a string.</p>
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(defn parse* [reader]
+				<pre class="brush: clojure">(defn- -&gt;str
+  [m]
+  (-&gt; (-&gt; m :form .content)
+      (string/replace #&quot;^;+\\s(\\s*)&quot; &quot;\$1&quot;)
+      (string/replace #&quot;^;+&quot; &quot;&quot;)))</pre>
+			</div>
+			<div class="box section">
+				<p>Merge two comment sections into one.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn merge-comments
+  [f s]
+  {:form (Comment. (str (-&gt;str f) &quot;\\n&quot; (-&gt;str s)))
+   :text (into (:text f) (:text s))
+   :start (:start f)
+   :end (:end s)})</pre>
+			</div>
+			<div class="box section">
+				<p>Parse one form. Throw exception with start line number included when an error is encountered.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn parse-form
+  [reader start]
+  (binding [*comments* sub-level-comments]
+    (try (. clojure.lang.LispReader
+            (read reader {:read-cond :preserve
+                           :eof :_eof}))
+         (catch Exception ex
+           (let [msg (str &quot;Problem parsing near line &quot; start
+                          &quot; &lt;&quot; (.readLine reader) &quot;&gt;&quot;
+                          &quot; original reported cause is &quot;
+                          (.getCause ex) &quot; -- &quot;
+                          (.getMessage ex))
+                 e (RuntimeException. msg)]
+             (.setStackTrace e (.getStackTrace ex))
+             (throw e))))))</pre>
+			</div>
+			<div class="box section">
+				<p>An empty comment that can be injected between other comments.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(def paragraph-comment
+  {:form (Comment. &quot;;;&quot;) :text [&quot;;;&quot;]})</pre>
+			</div>
+			<div class="box section">
+				<p>Merge adjacent comments together</p><p>We optionally lift inline comments to the top of the form. This monstrosity ensures that each consecutive group of inline comments is treated as a mergable block, but with a fake blank comment between non-adjacent inline comments. When merged and converted to markdown, this will produce a paragraph for each separate block of inline comments.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn merge-inline-comments
+  [cs c]
+  (if (re-find #&quot;^;(\\s|\$)&quot; (.content (:form c)))
+    cs
+    (if-let [t (peek cs)]
+      (if (adjacent? t c)
+        (conj cs c)
+        (conj cs paragraph-comment c))
+      (conj cs c))))</pre>
+			</div>
+			<div class="box section">
+				<p>Parse all inline comments and merge them if appropriate.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn parse-inline-comments
+  [start]
+  (when (and *lift-inline-comments*
+             (seq @sub-level-comments))
+    (cond-&gt;&gt; (reduce merge-inline-comments
+                     []
+                     @sub-level-comments)
+      (seq @top-level-comments)
+      (into [paragraph-comment])
+      true
+      (mapv #(assoc % :start start :end (dec start))))))</pre>
+			</div>
+			<div class="box section">
+				<p>Parse all contents in reader.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn parse*
+  [reader]
   (take-while
-   #(not= :_eof (:form %))
-   (flatten
-    (repeatedly
-     (fn []
-       (binding [*comments* top-level-comments]
-         (skip-spaces-and-comments reader))
-       (let [start (.getLineNumber reader)
-             form (binding [*comments* sub-level-comments]
-                    (try (. clojure.lang.LispReader
-                            (read  reader {:read-cond :allow
-                                           :eof :_eof}))
-                         (catch Exception ex
-                           (let [msg (str &quot;Problem parsing near line &quot; start
-                                          &quot; &lt;&quot; (.readLine reader) &quot;&gt;&quot;
-                                          &quot; original reported cause is &quot;
-                                          (.getCause ex) &quot; -- &quot;
-                                          (.getMessage ex))
-                                 e (RuntimeException. msg)]
-                             (.setStackTrace e (.getStackTrace ex))
-                             (throw e)))))
-             end (.getLineNumber reader)
-             code {:form form :start start :end end}
-             ;; We optionally lift inline comments to the top of the form.
-             ;; This monstrosity ensures that each consecutive group of inline
-             ;; comments is treated as a mergable block, but with a fake
-             ;; blank comment between non-adjacent inline comments. When merged
-             ;; and converted to markdown, this will produce a paragraph for
-             ;; each separate block of inline comments.
-             paragraph-comment {:form (Comment. &quot;;;&quot;)
-                                :text [&quot;;;&quot;]}
-             merge-inline-comments (fn [cs c]
-                                     (if (re-find #&quot;^;(\\s|\$)&quot;
-                                                  (.content (:form c)))
-                                       cs
-                                       (if-let [t (peek cs)]
-                                         (if (adjacent? t c)
-                                           (conj cs c)
-                                           (conj cs paragraph-comment c))
-                                         (conj cs c))))
-             inline-comments (when (and *lift-inline-comments*
-                                        (seq @sub-level-comments))
-                               (cond-&gt;&gt; (reduce merge-inline-comments
-                                                []
-                                                @sub-level-comments)
-                                 (seq @top-level-comments)
-                                 (into [paragraph-comment])
-                                 true
-                                 (mapv #(assoc % :start start :end (dec start)))))
-             comments (concat @top-level-comments inline-comments)]
-         (swap! top-level-comments (constantly []))
-         (swap! sub-level-comments (constantly []))
-         (if (empty? comments)
-           [code]
-           (vec (concat comments [code])))))))))</pre>
+    #(not= :_eof (:form %))
+    (flatten
+      (repeatedly
+        (fn []
+          (binding [*comments* top-level-comments]
+            (skip-spaces-and-comments reader))
+          (let [start (.getLineNumber reader)
+                form (parse-form reader start)
+                end (.getLineNumber reader)
+                code {:form form :start start :end end}
+                inline-comments (parse-inline-comments start)
+                comments (concat @top-level-comments inline-comments)]
+            (swap! top-level-comments (constantly []))
+            (swap! sub-level-comments (constantly []))
+            (if (empty? comments)
+              [code]
+              (vec (concat comments [code])))))))))</pre>
 			</div>
 			<div class="box section">
 				
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(defn strip-docstring [docstring raw]
+				<pre class="brush: clojure">====================================================================================================
+Getting all documentation strings</pre>
+			</div>
+			<div class="box section">
+				<p>Remove the docstring from a form.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn strip-docstring
+  [docstring raw]
   (-&gt; raw
-      (replace (str \\&quot; (-&gt; docstring
-                           str
-                           (replace &quot;\\ &quot;\\\\\\))
-                    \\&quot;))
-      (replace #&quot;#?\\^\\{\\s*:doc\\s*\\}&quot; )
-      (replace #&quot;\\n\\s*\\n&quot; &quot;\\n&quot;)
-      (replace #&quot;\\n\\s*\\)&quot; &quot;)&quot;)))</pre>
+      (string/replace (str \\&quot; (-&gt; docstring
+                                  str
+                                  (string/replace &quot;\\&quot;&quot; &quot;\\\\\\&quot;&quot;))
+                           \\&quot;)
+                      &quot;&quot;)
+      (string/replace #&quot;#?\\^\\{\\s*:doc\\s*\\}&quot; &quot;&quot;)
+      (string/replace #&quot;\\n\\s*\\n&quot; &quot;\\n&quot;)
+      (string/replace #&quot;\\n\\s*\\)&quot; &quot;)&quot;)))</pre>
 			</div>
 			<div class="box section">
 				
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(defn get-var-docstring [nspace-sym sym]
+				<pre class="brush: clojure">(defn get-var-docstring
+  [nspace-sym sym]
   (let [s (if nspace-sym
             (symbol (str nspace-sym) (str sym))
             (symbol (str sym)))]
@@ -323,13 +408,6 @@
       (-&gt; `(var ~s) eval meta :doc)
       ;; HACK: to handle types
       (catch Exception _))))</pre>
-			</div>
-			<div class="box section">
-				
-			</div>
-			<div class="box section">
-				<pre class="brush: clojure">(defmulti dispatch-form (fn [form _ _]
-                          (if (seq? form) (first form) form)))</pre>
 			</div>
 			<div class="box section">
 				
@@ -357,7 +435,7 @@
              ;; Exclude flush left docstrings from adjustment:
              (if (re-find #&quot;\\n[^\\s]&quot; docstring)
                docstring
-               (replace docstring #&quot;\\n  &quot; &quot;\\n&quot;)))
+               (string/replace docstring #&quot;\\n  &quot; &quot;\\n&quot;)))
            (strip-docstring docstring raw)
            (if (or (= 'ns (first form)) nspace) sym nspace-sym)]))
       [nil raw nspace-sym])))</pre>
@@ -378,6 +456,14 @@
   [body]
   (mapcat #(extract-impl-docstring %)
           body))</pre>
+			</div>
+			<div class="box section">
+				
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defmulti dispatch-form
+  (fn [form _ _]
+    (if (seq? form) (first form) form)))</pre>
 			</div>
 			<div class="box section">
 				
@@ -448,16 +534,16 @@
 				<pre class="brush: clojure">(defn dispatch-inner-form
   [form raw nspace-sym]
   (conj
-   (reduce (fn [[adoc araw] inner-form]
-             (if (seq? inner-form)
-               (let [[d r] (dispatch-form inner-form
-                                          araw
-                                          nspace-sym)]
-                 [(str adoc d) r])
-               [adoc araw]))
-           [nil raw]
-           form)
-   nspace-sym))</pre>
+    (reduce (fn [[adoc araw] inner-form]
+              (if (seq? inner-form)
+                (let [[d r] (dispatch-form inner-form
+                                           araw
+                                           nspace-sym)]
+                  [(str adoc d) r])
+                [adoc araw]))
+            [nil raw]
+            form)
+    nspace-sym))</pre>
 			</div>
 			<div class="box section">
 				
@@ -483,53 +569,55 @@
   [form raw nspace-sym]
   (cond (literal-form? form)
         (dispatch-literal form raw nspace-sym)
+
         (and (first form)
              (.isInstance clojure.lang.Named (first form))
              (re-find #&quot;^def&quot; (-&gt; form first name)))
-          (extract-common-docstring form raw nspace-sym)
+        (extract-common-docstring form raw nspace-sym)
+
         :else
-          (dispatch-inner-form form raw nspace-sym)))</pre>
+        (dispatch-inner-form form raw nspace-sym)))</pre>
+			</div>
+			<div class="box section">
+				<p>If the given form is a reader conditional return the inner form.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn unpack-reader-conditional
+  [form]
+  (if (instance? clojure.lang.ReaderConditional form)
+    (.form form)
+    form))</pre>
 			</div>
 			<div class="box section">
 				
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(defn extract-docstring [m raw nspace-sym]
-  (let [raw (join &quot;\\n&quot; (subvec raw (-&gt; m :start dec) (:end m)))
-        form (:form m)]
+  (let [raw (string/join &quot;\\n&quot; (subvec raw (-&gt; m :start dec) (:end m)))
+        form (unpack-reader-conditional (:form m))]
     (dispatch-form form raw nspace-sym)))</pre>
 			</div>
 			<div class="box section">
 				
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(defn- -&gt;str [m]
-  (-&gt; (-&gt; m :form .content)
-      (replace #&quot;^;+\\s(\\s*)&quot; &quot;\$1&quot;)
-      (replace #&quot;^;+&quot; )))</pre>
+				<pre class="brush: clojure">====================================================================================================
+Preparing results for output</pre>
 			</div>
 			<div class="box section">
-				
+				<p>Check if o is a comment.</p>
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(defn merge-comments [f s]
-  {:form (Comment. (str (-&gt;str f) &quot;\\n&quot; (-&gt;str s)))
-   :text (into (:text f) (:text s))
-   :start (:start f)
-   :end (:end s)})</pre>
-			</div>
-			<div class="box section">
-				
-			</div>
-			<div class="box section">
-				<pre class="brush: clojure">(defn comment? [o]
+				<pre class="brush: clojure">(defn comment?
+  [o]
   (-&gt;&gt; o :form (instance? Comment)))</pre>
 			</div>
 			<div class="box section">
-				
+				<p>Check if o is code.</p>
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(defn code? [o]
+				<pre class="brush: clojure">(defn code?
+  [o]
   (and (-&gt;&gt; o :form (instance? Comment) not)
        (-&gt;&gt; o :form nil? not)))</pre>
 			</div>
@@ -537,14 +625,8 @@
 				
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(defn adjacent? [f s]
-  (= (-&gt; f :end) (-&gt; s :start dec)))</pre>
-			</div>
-			<div class="box section">
-				
-			</div>
-			<div class="box section">
-				<pre class="brush: clojure">(defn arrange-in-sections [parsed-code raw-code]
+				<pre class="brush: clojure">(defn arrange-in-sections
+  [parsed-code raw-code]
   (loop [sections []
          f (first parsed-code)
          s (second parsed-code)
@@ -552,68 +634,99 @@
          nspace nil]
     (if f
       (cond
-       ;; ignore comments with only one semicolon
-       (and (comment? f) (re-find #&quot;^;(\\s|\$)&quot; (-&gt; f :form .content)))
-       (recur sections s (first nn) (next nn) nspace)
-       ;; merging comments block
-       (and (comment? f) (comment? s) (adjacent? f s))
-       (recur sections (merge-comments f s)
-              (first nn) (next nn)
-              nspace)
-       ;; merging adjacent code blocks
-       (and (code? f) (code? s) (adjacent? f s))
-       (let [[fdoc fcode nspace] (extract-docstring f raw-code nspace)
-             [sdoc scode _] (extract-docstring s raw-code nspace)]
-         (recur sections (assoc s
-                           :type :code
-                           :raw (str (or (:raw f) fcode) &quot;\\n&quot; scode)
-                           :docstring (str (or (:docstring f) fdoc) &quot;\\n\\n&quot; sdoc))
-                (first nn) (next nn) nspace))
-       ;; adjacent comments are added as extra documentation to code block
-       (and (comment? f) (code? s) (adjacent? f s))
-       (let [[doc code nspace] (extract-docstring s raw-code nspace)]
-         (recur sections (assoc s
-                           :type :code
-                           :raw (if *delete-lifted-comments*
-                                  ;; this is far from perfect but should work
-                                  ;; for most cases: erase matching comments
-                                  ;; and then remove lines that are blank
-                                  (-&gt; (reduce (fn [raw comment]
-                                                (replace raw
-                                                         (str comment &quot;\\n&quot;)
-                                                         &quot;\\n&quot;))
-                                              code
-                                              (:text f))
-                                      (replace #&quot;\\n\\s+\\n&quot; &quot;\\n&quot;))
-                                  code)
-                           :docstring (str doc &quot;\\n\\n&quot; (-&gt;str f)))
-                (first nn) (next nn) nspace))
-       ;; adding comment section
-       (comment? f)
-       (recur (conj sections (assoc f :type :comment :raw (-&gt;str f)))
-              s
-              (first nn) (next nn)
-              nspace)
-       ;; adding code section
-       :else
-       (let [[doc code nspace] (extract-docstring f raw-code nspace)]
-         (recur (conj sections (if (= (:type f) :code)
-                                 f
-                                 {:type :code
-                                  :raw code
-                                  :docstring doc}))
-                s (first nn) (next nn) nspace)))
+        ;; ignore comments with only one semicolon
+        (and (comment? f) (re-find #&quot;^;(\\s|\$)&quot; (-&gt; f :form .content)))
+        (recur sections s (first nn) (next nn) nspace)
+        ;; merging comments block
+        (and (comment? f) (comment? s) (adjacent? f s))
+        (recur sections (merge-comments f s)
+               (first nn) (next nn)
+               nspace)
+        ;; merging adjacent code blocks
+        (and (code? f) (code? s) (adjacent? f s))
+        (let [[fdoc fcode nspace] (extract-docstring f raw-code nspace)
+              [sdoc scode _] (extract-docstring s raw-code nspace)]
+          (recur sections (assoc s
+                                 :type :code
+                                 :raw (str (or (:raw f) fcode) &quot;\\n&quot; scode)
+                                 :docstring (str (or (:docstring f) fdoc) &quot;\\n\\n&quot; sdoc))
+                 (first nn) (next nn) nspace))
+        ;; adjacent comments are added as extra documentation to code block
+        (and (comment? f) (code? s) (adjacent? f s))
+        (let [[doc code nspace] (extract-docstring s raw-code nspace)]
+          (recur sections (assoc s
+                                 :type :code
+                                 :raw (if *delete-lifted-comments*
+                                        ;; this is far from perfect but should work
+                                        ;; for most cases: erase matching comments
+                                        ;; and then remove lines that are blank
+                                        (-&gt; (reduce (fn [raw comment]
+                                                      (string/replace raw
+                                                                      (str comment &quot;\\n&quot;)
+                                                                      &quot;\\n&quot;))
+                                                    code
+                                                    (:text f))
+                                            (string/replace #&quot;\\n\\s+\\n&quot; &quot;\\n&quot;))
+                                        code)
+                                 :docstring (str doc &quot;\\n\\n&quot; (-&gt;str f)))
+                 (first nn) (next nn) nspace))
+        ;; adding comment section
+        (comment? f)
+        (recur (conj sections (assoc f :type :comment :raw (-&gt;str f)))
+               s
+               (first nn) (next nn)
+               nspace)
+        ;; adding code section
+        :else
+        (let [[doc code nspace] (extract-docstring f raw-code nspace)]
+          (recur (conj sections (if (= (:type f) :code)
+                                  f
+                                  {:type :code
+                                   :raw code
+                                   :docstring doc}))
+                 s (first nn) (next nn) nspace)))
       sections)))</pre>
 			</div>
 			<div class="box section">
 				
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(defn parse [source-string]
-  (let [make-reader #(java.io.BufferedReader.
-                      (java.io.StringReader. (str source-string &quot;\\n&quot;)))
-        lines (vec (line-seq (make-reader)))
-        reader (clojure.lang.LineNumberingPushbackReader. (make-reader))
+				<pre class="brush: clojure">====================================================================================================
+Data Onboarding Helpers</pre>
+			</div>
+			<div class="box section">
+				<p>Make a buffered string reader for given string.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn buffered-string-reader
+  [source-string]
+  (java.io.BufferedReader.
+    (java.io.StringReader.
+      (str source-string &quot;\\n&quot;))))</pre>
+			</div>
+			<div class="box section">
+				<p>Read the string into vector of lines.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn read-lines
+  [source-string]
+  (vec (line-seq (buffered-string-reader source-string))))</pre>
+			</div>
+			<div class="box section">
+				<p>Create a line numbering reader for given string.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn line-numbering-reader
+  [source-string]
+  (clojure.lang.LineNumberingPushbackReader. (buffered-string-reader source-string)))</pre>
+			</div>
+			<div class="box section">
+				<p>Handle setting all readers and parse the given source.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn parse
+  [source-string]
+  (let [reader (line-numbering-reader source-string)
         old-cmt-rdr (aget (get-field clojure.lang.LispReader :macros nil) (int \\;))]
     (try
       (set-comment-reader read-comment)
@@ -621,42 +734,63 @@
       (let [parsed-code (-&gt; reader parse* doall)]
         (set-comment-reader old-cmt-rdr)
         (set-keyword-reader nil)
-        (arrange-in-sections parsed-code lines))
+        parsed-code)
       (catch Exception e
         (set-comment-reader old-cmt-rdr)
         (set-keyword-reader nil)
         (throw e)))))</pre>
 			</div>
 			<div class="box section">
-				
+				<p>Parse the given source and prepare sections.</p>
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(defn cljs-file? [filepath]
-  (.endsWith (lower-case filepath) &quot;cljs&quot;))</pre>
+				<pre class="brush: clojure">(defn parse-into-sections
+  [source-string]
+  (arrange-in-sections (parse source-string) (read-lines source-string)))</pre>
 			</div>
 			<div class="box section">
-				
+				<p>Check if a file ends with cljs</p>
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(defn cljx-file? [filepath]
-  (.endsWith (lower-case filepath) &quot;cljx&quot;))</pre>
+				<pre class="brush: clojure">(defn cljs-file?
+  [filepath]
+  (.endsWith (string/lower-case filepath) &quot;cljs&quot;))</pre>
+			</div>
+			<div class="box section">
+				<p>Check if a file ends with cljx</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn cljx-file?
+  [filepath]
+  (.endsWith (string/lower-case filepath) &quot;cljx&quot;))</pre>
+			</div>
+			<div class="box section">
+				<p>Check if a file ends with cljc</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn cljc-file?
+  [filepath]
+  (.endsWith (string/lower-case filepath) &quot;cljc&quot;))</pre>
 			</div>
 			<div class="box section">
 				
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(def cljx-data-readers {'+clj identity
+                        '+cljc identity
                         '+cljs identity})</pre>
 			</div>
 			<div class="box section">
-				
+				<p>Bind the data readers to ones that match the file name and execute the body.</p>
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(defmacro with-readers-for [file &amp; body]
+				<pre class="brush: clojure">(defmacro with-readers-for
+  [file &amp; body]
   `(let [readers# (merge {}
-                        (when (cljs-file? ~file) *cljs-data-readers*)
-                        (when (cljx-file? ~file) cljx-data-readers)
-                        default-data-readers)]
+                         (when (cljs-file? ~file) ctl/*cljs-data-readers*)
+                         (when (cljx-file? ~file) cljx-data-readers)
+                         (when (cljc-file? ~file) cljx-data-readers)
+                         default-data-readers)]
      (binding [*data-readers* readers#]
        ~@body)))</pre>
 			</div>
@@ -664,24 +798,32 @@
 				
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(defn parse-file [fn]
-  (with-readers-for fn
-    (binding [*comments-enabled* (atom true)]
-      (parse (slurp fn)))))</pre>
+				<pre class="brush: clojure">====================================================================================================
+Parsing entry points</pre>
 			</div>
 			<div class="box section">
-				
+				<p>Parse the given file into a list of forms.</p>
 			</div>
 			<div class="box section">
-				<pre class="brush: clojure">(defn parse-ns [filename]
+				<pre class="brush: clojure">(defn parse-file
+  [filename]
+  (with-readers-for filename
+    (parse-into-sections (slurp filename))))</pre>
+			</div>
+			<div class="box section">
+				<p>Get the namespace from a file.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn parse-ns
+  [filename]
   (let [file (io/file filename)
         filename (.getName file)]
     (with-readers-for filename
-                      (or (not-empty (-&gt; file
-                                         (read-file-ns-decl)
-                                         (second)
-                                         (str)))
-                          filename))))</pre>
+      (or (not-empty (-&gt; file
+                         (ctn/read-file-ns-decl)
+                         (second)
+                         (str)))
+          filename))))</pre>
 			</div>
 			<div class="box footer">
 				Generated by <a href="https://github.com/captain-porcelain/sidenotes">Sidenotes</a>.
