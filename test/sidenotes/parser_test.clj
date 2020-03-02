@@ -43,7 +43,12 @@ line3\r\nline4")
 
 
 (deftest reader-conditionals
-  (let [parsed (parser/parse-file "./test-resources/parser-test-reader-conditionals.cljc")
-        tmp (dorun (println (nth parsed 8)))]
-    (is (= 1 1))
+  (let [source (slurp "./test-resources/parser-test-reader-conditionals.cljc")
+        parsed (parser/parse source)
+        ;tmp (dorun (map #(println (str " --->\n" % "\n\n")) parsed))
+        sections (parser/parse-into-sections source)
+        ;tmp (dorun (map #(println (str " --->\n" % "\n\n")) sections))
+        ]
+    (is (= 11 (count parsed)))
+    (is (=  6 (count sections)))
     ))

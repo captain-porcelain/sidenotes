@@ -12,6 +12,7 @@ In the current early version the following features are supported:
 - Generating table of contents containing dependencies and namespaces
 - One html file per namespace showing code and comments side by side
 - Support for markdown in comments
+- Disabling / Enabling adding comments to the documentation with @SidenotesDisable and @SidenotesEnable inside comments
 
 ## Differences to Marginalia
 

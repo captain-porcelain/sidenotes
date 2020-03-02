@@ -73,10 +73,10 @@
 
   The following directives are defined:
 
-  * `@MargDisable` suppresses subsequent comments from the docs
-  * `@MargEnable` includes subsequent comments in the docs"
-  {"MargDisable" (fn [] (swap! comments-enabled? false))
-   "MargEnable"  (fn [] (swap! comments-enabled? true))})
+  * `@MSidenotesDisable` suppresses subsequent comments from the docs
+  * `@MSidenotesEnable` includes subsequent comments in the docs"
+  {"SidenotesDisable" (fn [] (swap! comments-enabled? false))
+   "SidenotesEnable"  (fn [] (swap! comments-enabled? true))})
 
 (defn process-directive!
   "If the given line is a directive, applies it.  Returns a value
@@ -91,6 +91,7 @@
     (not directive)))
 
 (defn read-comment
+  "Read a comment from the reader."
   ([reader semicolon]
    (let [sb (StringBuilder.)]
      (.append sb semicolon)
@@ -213,7 +214,7 @@
   [reader start]
   (binding [*comments* sub-level-comments]
     (try (. clojure.lang.LispReader
-            (read  reader {:read-cond :allow
+            (read reader {:read-cond :preserve
                            :eof :_eof}))
          (catch Exception ex
            (let [msg (str "Problem parsing near line " start
@@ -409,16 +410,25 @@
   [form raw nspace-sym]
   (cond (literal-form? form)
         (dispatch-literal form raw nspace-sym)
+
         (and (first form)
              (.isInstance clojure.lang.Named (first form))
              (re-find #"^def" (-> form first name)))
         (extract-common-docstring form raw nspace-sym)
+
         :else
         (dispatch-inner-form form raw nspace-sym)))
 
+(defn unpack-reader-conditional
+  "If the given form is a reader conditional return the inner form."
+  [form]
+  (if (instance? clojure.lang.ReaderConditional form)
+    (.form form)
+    form))
+
 (defn extract-docstring [m raw nspace-sym]
   (let [raw (string/join "\n" (subvec raw (-> m :start dec) (:end m)))
-        form (:form m)]
+        form (unpack-reader-conditional (:form m))]
     (dispatch-form form raw nspace-sym)))
 
 
@@ -527,8 +537,7 @@
 (defn parse
   "Handle setting all readers and parse the given source."
   [source-string]
-  (let [lines (read-lines source-string)
-        reader (line-numbering-reader source-string)
+  (let [reader (line-numbering-reader source-string)
         old-cmt-rdr (aget (get-field clojure.lang.LispReader :macros nil) (int \;))]
     (try
       (set-comment-reader read-comment)
@@ -536,11 +545,16 @@
       (let [parsed-code (-> reader parse* doall)]
         (set-comment-reader old-cmt-rdr)
         (set-keyword-reader nil)
-        (arrange-in-sections parsed-code lines))
+        parsed-code)
       (catch Exception e
         (set-comment-reader old-cmt-rdr)
         (set-keyword-reader nil)
         (throw e)))))
+
+(defn parse-into-sections
+  "Parse the given source and prepare sections."
+  [source-string]
+  (arrange-in-sections (parse source-string) (read-lines source-string)))
 
 (defn cljs-file?
   "Check if a file ends with cljs"
@@ -552,7 +566,13 @@
   [filepath]
   (.endsWith (string/lower-case filepath) "cljx"))
 
+(defn cljc-file?
+  "Check if a file ends with cljc"
+  [filepath]
+  (.endsWith (string/lower-case filepath) "cljc"))
+
 (def cljx-data-readers {'+clj identity
+                        '+cljc identity
                         '+cljs identity})
 
 (defmacro with-readers-for
@@ -561,6 +581,7 @@
   `(let [readers# (merge {}
                          (when (cljs-file? ~file) ctl/*cljs-data-readers*)
                          (when (cljx-file? ~file) cljx-data-readers)
+                         (when (cljc-file? ~file) cljx-data-readers)
                          default-data-readers)]
      (binding [*data-readers* readers#]
        ~@body)))
@@ -573,7 +594,7 @@
   "Parse the given file into a list of forms."
   [filename]
   (with-readers-for filename
-    (parse (slurp filename))))
+    (parse-into-sections (slurp filename))))
 
 (defn parse-ns
   "Get the namespace from a file."
