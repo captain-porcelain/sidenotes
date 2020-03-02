@@ -6,12 +6,14 @@
 ;; readability.
 (ns sidenotes.parser
   "Provides the parsing facilities for Marginalia."
-  (:require [clojure.java.io :as io])
-  (:refer-clojure :exclude [replace])
-  (:use [clojure [string :only (join replace lower-case)]]
-        [cljs.tagged-literals :only [*cljs-data-readers*]]
-        [clojure.tools.namespace :only (read-file-ns-decl)]))
+  (:require
+    [clojure.string :as string]
+    [clojure.java.io :as io]
+    [clojure.tools.namespace :as ctn]
+    [cljs.tagged-literals :as ctl]))
 
+;; ====================================================================================================
+;; Helper functions
 
 ;; Extracted from clojure.contrib.reflect
 (defn get-field
@@ -26,52 +28,60 @@
 (defn call-method
   "Calls a private or protected method.
 
-   params is a vector of classes which correspond to the arguments to
-   the method e
+  params is a vector of classes which correspond to the arguments to
+  the method e
 
-   obj is nil for static methods, the instance object otherwise.
+  obj is nil for static methods, the instance object otherwise.
 
-   The method-name is given a symbol or a keyword (something Named)."
+  The method-name is given a symbol or a keyword (something Named)."
   [klass method-name params obj & args]
   (-> klass (.getDeclaredMethod (name method-name)
                                 (into-array Class params))
       (doto (.setAccessible true))
       (.invoke obj (into-array Object args))))
 
+
+;; ====================================================================================================
+;; Comment Handling
+
+;; A simple record for holding comments.
 (defrecord Comment [content])
 
+;; Attach a method for printing to Comment records.
 (defmethod print-method Comment [comment ^String out]
   (.write out (str \" (.content comment) \")))
 
+;; Hold comments that are defined at top level.
 (def top-level-comments (atom []))
+
+;; Hold comments that are defined inside a form.
 (def sub-level-comments (atom []))
 
 (def ^{:dynamic true} *comments* nil)
-(def ^{:dynamic true} *comments-enabled* nil)
 (def ^{:dynamic true} *lift-inline-comments* nil)
 (def ^{:dynamic true} *delete-lifted-comments* nil)
 
-(defn comments-enabled?
-  []
-  @*comments-enabled*)
+(def comments-enabled?
+  "Remeber if adding comments is currently enabled or disabled."
+  (atom true))
 
 (def directives
   "Marginalia can be given directives in comments.  A directive is a comment
-   line containing a directive name, in the form `;; @DirectiveName`.
-   Directives change the behavior of the parser within the files that contain
-   them.
+  line containing a directive name, in the form `;; @DirectiveName`.
+  Directives change the behavior of the parser within the files that contain
+  them.
 
-   The following directives are defined:
+  The following directives are defined:
 
-   * `@MargDisable` suppresses subsequent comments from the docs
-   * `@MargEnable` includes subsequent comments in the docs"
-  {"MargDisable" (fn [] (swap! *comments-enabled* (constantly false)))
-   "MargEnable"  (fn [] (swap! *comments-enabled* (constantly true)))})
+  * `@MargDisable` suppresses subsequent comments from the docs
+  * `@MargEnable` includes subsequent comments in the docs"
+  {"MargDisable" (fn [] (swap! comments-enabled? false))
+   "MargEnable"  (fn [] (swap! comments-enabled? true))})
 
 (defn process-directive!
   "If the given line is a directive, applies it.  Returns a value
-   indicating whether the line should be included in the comments
-   list."
+  indicating whether the line should be included in the comments
+  list."
   [line]
   (let [directive (->> (re-find #"^;+\s*@(\w+)" line)
                        (last)
@@ -91,7 +101,7 @@
            (let [line (dec (.getLineNumber reader))
                  text (.toString sb)
                  include? (process-directive! text)]
-             (when (and include? (comments-enabled?))
+             (when (and include? @comments-enabled?)
                (swap! *comments* conj {:form (Comment. text)
                                        :text [text]
                                        :start line
@@ -103,10 +113,26 @@
   ([reader semicolon opts pending]
    (read-comment reader semicolon)))
 
-(defn set-comment-reader [reader]
+(defn set-comment-reader
+  "Set the given reader as handler for lines starting with ;"
+  [reader]
   (aset (get-field clojure.lang.LispReader :macros nil)
         (int \;)
         reader))
+
+(defn skip-spaces-and-comments
+  "Skip forward until something besides a comment or whitespace shows up."
+  [rdr]
+  (loop [c (.read rdr)]
+    (cond (= c -1) nil
+          (= (char c) \;) (do (read-comment rdr \;)
+                              (recur (.read rdr)))
+          (#{\space \tab \return \newline \,} (char c)) (recur (.read rdr))
+          :else (.unread rdr c))))
+
+
+;; ====================================================================================================
+;; Keyword Handling
 
 (defrecord DoubleColonKeyword [content])
 
@@ -138,6 +164,7 @@
                  nil s)))
 
 (defn read-keyword
+  "Read a keyword from reader."
   ([reader colon]
    (let [c (.read reader)]
      (if (= (int \:) c)
@@ -150,93 +177,129 @@
   ([reader colon opts pending]
    (read-keyword reader colon)))
 
-(defn set-keyword-reader [reader]
+(defn set-keyword-reader
+  "Set the given reader as handler for keywords."
+  [reader]
   (aset (get-field clojure.lang.LispReader :macros nil)
         (int \:)
         reader))
 
-(defn skip-spaces-and-comments [rdr]
-  (loop [c (.read rdr)]
-    (cond (= c -1) nil
-          (= (char c) \;)
-          (do (read-comment rdr \;)
-              (recur (.read rdr)))
-          (#{\space \tab \return \newline \,} (char c))
-          (recur (.read rdr))
-          :else (.unread rdr c))))
 
-(declare adjacent?)
-(declare merge-comments)
+;; ====================================================================================================
+;; Handling of parsed forms
 
-(defn parse* [reader]
+(defn adjacent?
+  "Check if two sections are adjacent."
+  [f s]
+  (= (-> f :end) (-> s :start dec)))
+
+(defn- ->str
+  "Convert a section to a string."
+  [m]
+  (-> (-> m :form .content)
+      (string/replace #"^;+\s(\s*)" "$1")
+      (string/replace #"^;+" "")))
+
+(defn merge-comments
+  "Merge two comment sections into one."
+  [f s]
+  {:form (Comment. (str (->str f) "\n" (->str s)))
+   :text (into (:text f) (:text s))
+   :start (:start f)
+   :end (:end s)})
+
+(defn parse-form
+  "Parse one form. Throw exception with start line number included when an error is encountered."
+  [reader start]
+  (binding [*comments* sub-level-comments]
+    (try (. clojure.lang.LispReader
+            (read  reader {:read-cond :allow
+                           :eof :_eof}))
+         (catch Exception ex
+           (let [msg (str "Problem parsing near line " start
+                          " <" (.readLine reader) ">"
+                          " original reported cause is "
+                          (.getCause ex) " -- "
+                          (.getMessage ex))
+                 e (RuntimeException. msg)]
+             (.setStackTrace e (.getStackTrace ex))
+             (throw e))))))
+
+(def paragraph-comment
+  "An empty comment that can be injected between other comments."
+  {:form (Comment. ";;") :text [";;"]})
+
+;; We optionally lift inline comments to the top of the form.
+;; This monstrosity ensures that each consecutive group of inline
+;; comments is treated as a mergable block, but with a fake
+;; blank comment between non-adjacent inline comments. When merged
+;; and converted to markdown, this will produce a paragraph for
+;; each separate block of inline comments.
+(defn merge-inline-comments
+  "Merge adjacent comments together"
+  [cs c]
+  (if (re-find #"^;(\s|$)" (.content (:form c)))
+    cs
+    (if-let [t (peek cs)]
+      (if (adjacent? t c)
+        (conj cs c)
+        (conj cs paragraph-comment c))
+      (conj cs c))))
+
+(defn parse-inline-comments
+  "Parse all inline comments and merge them if appropriate."
+  [start]
+  (when (and *lift-inline-comments*
+             (seq @sub-level-comments))
+    (cond->> (reduce merge-inline-comments
+                     []
+                     @sub-level-comments)
+      (seq @top-level-comments)
+      (into [paragraph-comment])
+      true
+      (mapv #(assoc % :start start :end (dec start))))))
+
+(defn parse*
+  "Parse all contents in reader."
+  [reader]
   (take-while
-   #(not= :_eof (:form %))
-   (flatten
-    (repeatedly
-     (fn []
-       (binding [*comments* top-level-comments]
-         (skip-spaces-and-comments reader))
-       (let [start (.getLineNumber reader)
-             form (binding [*comments* sub-level-comments]
-                    (try (. clojure.lang.LispReader
-                            (read  reader {:read-cond :allow
-                                           :eof :_eof}))
-                         (catch Exception ex
-                           (let [msg (str "Problem parsing near line " start
-                                          " <" (.readLine reader) ">"
-                                          " original reported cause is "
-                                          (.getCause ex) " -- "
-                                          (.getMessage ex))
-                                 e (RuntimeException. msg)]
-                             (.setStackTrace e (.getStackTrace ex))
-                             (throw e)))))
-             end (.getLineNumber reader)
-             code {:form form :start start :end end}
-             ;; We optionally lift inline comments to the top of the form.
-             ;; This monstrosity ensures that each consecutive group of inline
-             ;; comments is treated as a mergable block, but with a fake
-             ;; blank comment between non-adjacent inline comments. When merged
-             ;; and converted to markdown, this will produce a paragraph for
-             ;; each separate block of inline comments.
-             paragraph-comment {:form (Comment. ";;")
-                                :text [";;"]}
-             merge-inline-comments (fn [cs c]
-                                     (if (re-find #"^;(\s|$)"
-                                                  (.content (:form c)))
-                                       cs
-                                       (if-let [t (peek cs)]
-                                         (if (adjacent? t c)
-                                           (conj cs c)
-                                           (conj cs paragraph-comment c))
-                                         (conj cs c))))
-             inline-comments (when (and *lift-inline-comments*
-                                        (seq @sub-level-comments))
-                               (cond->> (reduce merge-inline-comments
-                                                []
-                                                @sub-level-comments)
-                                 (seq @top-level-comments)
-                                 (into [paragraph-comment])
-                                 true
-                                 (mapv #(assoc % :start start :end (dec start)))))
-             comments (concat @top-level-comments inline-comments)]
-         (swap! top-level-comments (constantly []))
-         (swap! sub-level-comments (constantly []))
-         (if (empty? comments)
-           [code]
-           (vec (concat comments [code])))))))))
+    #(not= :_eof (:form %))
+    (flatten
+      (repeatedly
+        (fn []
+          (binding [*comments* top-level-comments]
+            (skip-spaces-and-comments reader))
+          (let [start (.getLineNumber reader)
+                form (parse-form reader start)
+                end (.getLineNumber reader)
+                code {:form form :start start :end end}
+                inline-comments (parse-inline-comments start)
+                comments (concat @top-level-comments inline-comments)]
+            (swap! top-level-comments (constantly []))
+            (swap! sub-level-comments (constantly []))
+            (if (empty? comments)
+              [code]
+              (vec (concat comments [code])))))))))
 
-(defn strip-docstring [docstring raw]
+
+;; ====================================================================================================
+;; Getting all documentation strings
+
+(defn strip-docstring
+  "Remove the docstring from a form."
+  [docstring raw]
   (-> raw
-      (replace (str \" (-> docstring
-                           str
-                           (replace "\"" "\\\""))
-                    \")
-               "")
-      (replace #"#?\^\{\s*:doc\s*\}" "")
-      (replace #"\n\s*\n" "\n")
-      (replace #"\n\s*\)" ")")))
+      (string/replace (str \" (-> docstring
+                                  str
+                                  (string/replace "\"" "\\\""))
+                           \")
+                      "")
+      (string/replace #"#?\^\{\s*:doc\s*\}" "")
+      (string/replace #"\n\s*\n" "\n")
+      (string/replace #"\n\s*\)" ")")))
 
-(defn get-var-docstring [nspace-sym sym]
+(defn get-var-docstring
+  [nspace-sym sym]
   (let [s (if nspace-sym
             (symbol (str nspace-sym) (str sym))
             (symbol (str sym)))]
@@ -244,9 +307,6 @@
       (-> `(var ~s) eval meta :doc)
       ;; HACK: to handle types
       (catch Exception _))))
-
-(defmulti dispatch-form (fn [form _ _]
-                          (if (seq? form) (first form) form)))
 
 (defn- extract-common-docstring
   [form raw nspace-sym]
@@ -270,7 +330,7 @@
              ;; Exclude flush left docstrings from adjustment:
              (if (re-find #"\n[^\s]" docstring)
                docstring
-               (replace docstring #"\n  " "\n")))
+               (string/replace docstring #"\n  " "\n")))
            (strip-docstring docstring raw)
            (if (or (= 'ns (first form)) nspace) sym nspace-sym)]))
       [nil raw nspace-sym])))
@@ -283,6 +343,11 @@
   [body]
   (mapcat #(extract-impl-docstring %)
           body))
+
+
+(defmulti dispatch-form
+  (fn [form _ _]
+    (if (seq? form) (first form) form)))
 
 (defmethod dispatch-form 'defprotocol
   [form raw nspace-sym]
@@ -321,16 +386,16 @@
 (defn dispatch-inner-form
   [form raw nspace-sym]
   (conj
-   (reduce (fn [[adoc araw] inner-form]
-             (if (seq? inner-form)
-               (let [[d r] (dispatch-form inner-form
-                                          araw
-                                          nspace-sym)]
-                 [(str adoc d) r])
-               [adoc araw]))
-           [nil raw]
-           form)
-   nspace-sym))
+    (reduce (fn [[adoc araw] inner-form]
+              (if (seq? inner-form)
+                (let [[d r] (dispatch-form inner-form
+                                           araw
+                                           nspace-sym)]
+                  [(str adoc d) r])
+                [adoc araw]))
+            [nil raw]
+            form)
+    nspace-sym))
 
 (defn- dispatch-literal
   [form raw nspace-sym]
@@ -347,37 +412,32 @@
         (and (first form)
              (.isInstance clojure.lang.Named (first form))
              (re-find #"^def" (-> form first name)))
-          (extract-common-docstring form raw nspace-sym)
+        (extract-common-docstring form raw nspace-sym)
         :else
-          (dispatch-inner-form form raw nspace-sym)))
+        (dispatch-inner-form form raw nspace-sym)))
 
 (defn extract-docstring [m raw nspace-sym]
-  (let [raw (join "\n" (subvec raw (-> m :start dec) (:end m)))
+  (let [raw (string/join "\n" (subvec raw (-> m :start dec) (:end m)))
         form (:form m)]
     (dispatch-form form raw nspace-sym)))
 
-(defn- ->str [m]
-  (-> (-> m :form .content)
-      (replace #"^;+\s(\s*)" "$1")
-      (replace #"^;+" "")))
 
-(defn merge-comments [f s]
-  {:form (Comment. (str (->str f) "\n" (->str s)))
-   :text (into (:text f) (:text s))
-   :start (:start f)
-   :end (:end s)})
+;; ====================================================================================================
+;; Preparing results for output
 
-(defn comment? [o]
+(defn comment?
+  "Check if o is a comment."
+  [o]
   (->> o :form (instance? Comment)))
 
-(defn code? [o]
+(defn code?
+  "Check if o is code."
+  [o]
   (and (->> o :form (instance? Comment) not)
        (->> o :form nil? not)))
 
-(defn adjacent? [f s]
-  (= (-> f :end) (-> s :start dec)))
-
-(defn arrange-in-sections [parsed-code raw-code]
+(defn arrange-in-sections
+  [parsed-code raw-code]
   (loop [sections []
          f (first parsed-code)
          s (second parsed-code)
@@ -385,64 +445,90 @@
          nspace nil]
     (if f
       (cond
-       ;; ignore comments with only one semicolon
-       (and (comment? f) (re-find #"^;(\s|$)" (-> f :form .content)))
-       (recur sections s (first nn) (next nn) nspace)
-       ;; merging comments block
-       (and (comment? f) (comment? s) (adjacent? f s))
-       (recur sections (merge-comments f s)
-              (first nn) (next nn)
-              nspace)
-       ;; merging adjacent code blocks
-       (and (code? f) (code? s) (adjacent? f s))
-       (let [[fdoc fcode nspace] (extract-docstring f raw-code nspace)
-             [sdoc scode _] (extract-docstring s raw-code nspace)]
-         (recur sections (assoc s
-                           :type :code
-                           :raw (str (or (:raw f) fcode) "\n" scode)
-                           :docstring (str (or (:docstring f) fdoc) "\n\n" sdoc))
-                (first nn) (next nn) nspace))
-       ;; adjacent comments are added as extra documentation to code block
-       (and (comment? f) (code? s) (adjacent? f s))
-       (let [[doc code nspace] (extract-docstring s raw-code nspace)]
-         (recur sections (assoc s
-                           :type :code
-                           :raw (if *delete-lifted-comments*
-                                  ;; this is far from perfect but should work
-                                  ;; for most cases: erase matching comments
-                                  ;; and then remove lines that are blank
-                                  (-> (reduce (fn [raw comment]
-                                                (replace raw
-                                                         (str comment "\n")
-                                                         "\n"))
-                                              code
-                                              (:text f))
-                                      (replace #"\n\s+\n" "\n"))
-                                  code)
-                           :docstring (str doc "\n\n" (->str f)))
-                (first nn) (next nn) nspace))
-       ;; adding comment section
-       (comment? f)
-       (recur (conj sections (assoc f :type :comment :raw (->str f)))
-              s
-              (first nn) (next nn)
-              nspace)
-       ;; adding code section
-       :else
-       (let [[doc code nspace] (extract-docstring f raw-code nspace)]
-         (recur (conj sections (if (= (:type f) :code)
-                                 f
-                                 {:type :code
-                                  :raw code
-                                  :docstring doc}))
-                s (first nn) (next nn) nspace)))
+        ;; ignore comments with only one semicolon
+        (and (comment? f) (re-find #"^;(\s|$)" (-> f :form .content)))
+        (recur sections s (first nn) (next nn) nspace)
+
+        ;; merging comments block
+        (and (comment? f) (comment? s) (adjacent? f s))
+        (recur sections (merge-comments f s)
+               (first nn) (next nn)
+               nspace)
+
+        ;; merging adjacent code blocks
+        (and (code? f) (code? s) (adjacent? f s))
+        (let [[fdoc fcode nspace] (extract-docstring f raw-code nspace)
+              [sdoc scode _] (extract-docstring s raw-code nspace)]
+          (recur sections (assoc s
+                                 :type :code
+                                 :raw (str (or (:raw f) fcode) "\n" scode)
+                                 :docstring (str (or (:docstring f) fdoc) "\n\n" sdoc))
+                 (first nn) (next nn) nspace))
+
+        ;; adjacent comments are added as extra documentation to code block
+        (and (comment? f) (code? s) (adjacent? f s))
+        (let [[doc code nspace] (extract-docstring s raw-code nspace)]
+          (recur sections (assoc s
+                                 :type :code
+                                 :raw (if *delete-lifted-comments*
+                                        ;; this is far from perfect but should work
+                                        ;; for most cases: erase matching comments
+                                        ;; and then remove lines that are blank
+                                        (-> (reduce (fn [raw comment]
+                                                      (string/replace raw
+                                                                      (str comment "\n")
+                                                                      "\n"))
+                                                    code
+                                                    (:text f))
+                                            (string/replace #"\n\s+\n" "\n"))
+                                        code)
+                                 :docstring (str doc "\n\n" (->str f)))
+                 (first nn) (next nn) nspace))
+
+        ;; adding comment section
+        (comment? f)
+        (recur (conj sections (assoc f :type :comment :raw (->str f)))
+               s
+               (first nn) (next nn)
+               nspace)
+
+        ;; adding code section
+        :else
+        (let [[doc code nspace] (extract-docstring f raw-code nspace)]
+          (recur (conj sections (if (= (:type f) :code)
+                                  f
+                                  {:type :code
+                                   :raw code
+                                   :docstring doc}))
+                 s (first nn) (next nn) nspace)))
       sections)))
 
-(defn parse [source-string]
-  (let [make-reader #(java.io.BufferedReader.
-                      (java.io.StringReader. (str source-string "\n")))
-        lines (vec (line-seq (make-reader)))
-        reader (clojure.lang.LineNumberingPushbackReader. (make-reader))
+
+;; ====================================================================================================
+;; Data Onboarding Helpers
+
+(defn buffered-string-reader
+  "Make a buffered string reader for given string."
+  [source-string]
+  (java.io.BufferedReader.
+    (java.io.StringReader.
+      (str source-string "\n"))))
+
+(defn read-lines
+  "Read the string into vector of lines."
+  [source-string]
+  (vec (line-seq (buffered-string-reader source-string))))
+
+(defn line-numbering-reader
+  "Create a line numbering reader for given string."
+  [source-string]
+  (clojure.lang.LineNumberingPushbackReader. (buffered-string-reader source-string)))
+
+(defn parse
+  "Handle setting all readers and parse the given source."
+  [source-string]
+  (let [lines (read-lines source-string)
+        reader (line-numbering-reader source-string)
         old-cmt-rdr (aget (get-field clojure.lang.LispReader :macros nil) (int \;))]
     (try
       (set-comment-reader read-comment)
@@ -456,34 +542,48 @@
         (set-keyword-reader nil)
         (throw e)))))
 
-(defn cljs-file? [filepath]
-  (.endsWith (lower-case filepath) "cljs"))
+(defn cljs-file?
+  "Check if a file ends with cljs"
+  [filepath]
+  (.endsWith (string/lower-case filepath) "cljs"))
 
-(defn cljx-file? [filepath]
-  (.endsWith (lower-case filepath) "cljx"))
+(defn cljx-file?
+  "Check if a file ends with cljx"
+  [filepath]
+  (.endsWith (string/lower-case filepath) "cljx"))
 
 (def cljx-data-readers {'+clj identity
                         '+cljs identity})
 
-(defmacro with-readers-for [file & body]
+(defmacro with-readers-for
+  "Bind the data readers to ones that match the file name and execute the body."
+  [file & body]
   `(let [readers# (merge {}
-                        (when (cljs-file? ~file) *cljs-data-readers*)
-                        (when (cljx-file? ~file) cljx-data-readers)
-                        default-data-readers)]
+                         (when (cljs-file? ~file) ctl/*cljs-data-readers*)
+                         (when (cljx-file? ~file) cljx-data-readers)
+                         default-data-readers)]
      (binding [*data-readers* readers#]
        ~@body)))
 
-(defn parse-file [fn]
-  (with-readers-for fn
-    (binding [*comments-enabled* (atom true)]
-      (parse (slurp fn)))))
 
-(defn parse-ns [filename]
+;; ====================================================================================================
+;; Parsing entry points
+
+(defn parse-file
+  "Parse the given file into a list of forms."
+  [filename]
+  (with-readers-for filename
+    (parse (slurp filename))))
+
+(defn parse-ns
+  "Get the namespace from a file."
+  [filename]
   (let [file (io/file filename)
         filename (.getName file)]
     (with-readers-for filename
-                      (or (not-empty (-> file
-                                         (read-file-ns-decl)
-                                         (second)
-                                         (str)))
-                          filename))))
+      (or (not-empty (-> file
+                         (ctn/read-file-ns-decl)
+                         (second)
+                         (str)))
+          filename))))
+

@@ -14,7 +14,7 @@ tests:
 		clojure -A:test -m kaocha.runner
 
 test-watch:
-		clojure -A:test -m kaocha.runner --watch
+		clojure -A:test -m kaocha.runner --watch --no-capture-output
 
 repl:
 		clojure -A:repl -m repl 7878
