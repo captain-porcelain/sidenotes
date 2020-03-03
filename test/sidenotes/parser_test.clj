@@ -50,5 +50,15 @@ line3\r\nline4")
         ;tmp (dorun (map #(println (str " --->\n" % "\n\n")) sections))
         ]
     (is (= 11 (count parsed)))
-    (is (=  6 (count sections)))
-    ))
+    (is (=  6 (count sections)))))
+
+
+(deftest section-comments
+  (let [source (slurp "./test-resources/parser-test-section-comments.cljc")
+        parsed (parser/parse source)
+        ;tmp (dorun (map #(println (str " --->\n" % "\n\n")) parsed))
+        sections (parser/parse-into-sections source)
+        tmp (dorun (map #(println (str " --->\n" % "\n\n")) sections))
+        ]
+    (is (= 6 (count parsed)))
+    (is (= 4 (count sections)))))
