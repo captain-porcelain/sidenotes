@@ -58,7 +58,7 @@ line3\r\nline4")
         parsed (parser/parse source)
         ;tmp (dorun (map #(println (str " --->\n" % "\n\n")) parsed))
         sections (parser/parse-into-sections source)
-        tmp (dorun (map #(println (str " --->\n" % "\n\n")) sections))
+        ;tmp (dorun (map #(println (str " --->\n" % "\n\n")) sections))
         ]
     (is (= 6 (count parsed)))
     (is (= 4 (count sections)))))

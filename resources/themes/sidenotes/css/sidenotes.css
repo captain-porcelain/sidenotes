@@ -19,6 +19,10 @@ a, a:link, a:hover, a:visited, a:active {
 	padding: 3px;
 }
 
+.span {
+    grid-column: span 2;
+}
+
 .header {
 	background-color: #9d74e3;
 	grid-column: 1 / 3;

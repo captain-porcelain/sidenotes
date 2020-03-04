@@ -31,14 +31,10 @@
     [clojure.tools.namespace :as ctn]
     [cljs.tagged-literals :as ctl]))</pre>
 			</div>
-			<div class="box section">
-				
+						<div class="box section span">
+				<hr/><h3>Helper functions</h3>
 			</div>
-			<div class="box section">
-				<pre class="brush: clojure">====================================================================================================
-Helper functions</pre>
-			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Access to private or protected field.  field-name is a symbol or keyword.</p><p>Extracted from clojure.contrib.reflect</p>
 			</div>
 			<div class="box section">
@@ -48,7 +44,7 @@ Helper functions</pre>
       (doto (.setAccessible true))
       (.get obj)))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Calls a private or protected method.</p><p>params is a vector of classes which correspond to the arguments to the method e</p><p>obj is nil for static methods, the instance object otherwise.</p><p>The method-name is given a symbol or a keyword (something Named).</p><p>Extracted from clojure.contrib.reflect</p>
 			</div>
 			<div class="box section">
@@ -59,39 +55,35 @@ Helper functions</pre>
       (doto (.setAccessible true))
       (.invoke obj (into-array Object args))))</pre>
 			</div>
-			<div class="box section">
-				
+						<div class="box section span">
+				<hr/><h3>Comment Handling</h3>
 			</div>
-			<div class="box section">
-				<pre class="brush: clojure">====================================================================================================
-Comment Handling</pre>
-			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>A simple record for holding comments.</p>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(defrecord Comment [content])</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Attach a method for printing to Comment records.</p>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(defmethod print-method Comment [comment ^String out]
   (.write out (str \\&quot; (.content comment) \\&quot;)))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Hold comments that are defined at top level.</p>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(def top-level-comments (atom []))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Hold comments that are defined inside a form.</p>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(def sub-level-comments (atom []))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -99,14 +91,14 @@ Comment Handling</pre>
 (def ^{:dynamic true} *lift-inline-comments* nil)
 (def ^{:dynamic true} *delete-lifted-comments* nil)</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Remeber if adding comments is currently enabled or disabled.</p>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(def comments-enabled?
   (atom true))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Marginalia can be given directives in comments.  A directive is a comment line containing a directive name, in the form <code>;; @DirectiveName</code>. Directives change the behavior of the parser within the files that contain them.</p><p>The following directives are defined:</p><ul><li><code>@MSidenotesDisable</code> suppresses subsequent comments from the docs</li><li><code>@MSidenotesEnable</code> includes subsequent comments in the docs</li></ul>
 			</div>
 			<div class="box section">
@@ -114,7 +106,7 @@ Comment Handling</pre>
   {&quot;SidenotesDisable&quot; (fn [] (swap! comments-enabled? false))
    &quot;SidenotesEnable&quot;  (fn [] (swap! comments-enabled? true))})</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>If the given line is a directive, applies it.  Returns a value indicating whether the line should be included in the comments list.</p>
 			</div>
 			<div class="box section">
@@ -127,7 +119,7 @@ Comment Handling</pre>
       (directive))
     (not directive)))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Read a comment from the reader.</p>
 			</div>
 			<div class="box section">
@@ -154,7 +146,7 @@ Comment Handling</pre>
   ([reader semicolon opts pending]
    (read-comment reader semicolon)))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Set the given reader as handler for lines starting with ;</p>
 			</div>
 			<div class="box section">
@@ -164,7 +156,7 @@ Comment Handling</pre>
         (int \\;)
         reader))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Skip forward until something besides a comment or whitespace shows up.</p>
 			</div>
 			<div class="box section">
@@ -177,34 +169,30 @@ Comment Handling</pre>
           (#{\\space \\tab \\return \\newline \\,} (char c)) (recur (.read rdr))
           :else (.unread rdr c))))</pre>
 			</div>
-			<div class="box section">
-				
+						<div class="box section span">
+				<hr/><h3>Keyword Handling</h3>
 			</div>
-			<div class="box section">
-				<pre class="brush: clojure">====================================================================================================
-Keyword Handling</pre>
-			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(defrecord DoubleColonKeyword [content])</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(defmethod print-method DoubleColonKeyword [dck ^java.io.Writer out]
   (.write out (str \\: (.content dck))))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(defmethod print-dup DoubleColonKeyword [dck ^java.io.Writer out]
   (print-method dck out))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -213,7 +201,7 @@ Keyword Handling</pre>
                [java.io.PushbackReader Character/TYPE]
                nil reader c))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Clojure 1.9 changed the signature of LispReader/matchSymbol, taking a new parameter of type LispReader\$Resolver.  Conveniently, we can test for the existence of the <em>reader-resolver</em> var to detect running under 1.9.</p><p>We must take care to use the correct overload for the project's runtime, else we will crash and fail people's builds.</p>
 			</div>
 			<div class="box section">
@@ -227,7 +215,7 @@ Keyword Handling</pre>
                  [String]
                  nil s)))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Read a keyword from reader.</p>
 			</div>
 			<div class="box section">
@@ -244,7 +232,7 @@ Keyword Handling</pre>
   ([reader colon opts pending]
    (read-keyword reader colon)))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Set the given reader as handler for keywords.</p>
 			</div>
 			<div class="box section">
@@ -254,14 +242,10 @@ Keyword Handling</pre>
         (int \\:)
         reader))</pre>
 			</div>
-			<div class="box section">
-				
+						<div class="box section span">
+				<hr/><h3>Handling of parsed forms</h3>
 			</div>
-			<div class="box section">
-				<pre class="brush: clojure">====================================================================================================
-Handling of parsed forms</pre>
-			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Check if two sections are adjacent.</p>
 			</div>
 			<div class="box section">
@@ -269,7 +253,7 @@ Handling of parsed forms</pre>
   [f s]
   (= (-&gt; f :end) (-&gt; s :start dec)))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Convert a section to a string.</p>
 			</div>
 			<div class="box section">
@@ -279,7 +263,7 @@ Handling of parsed forms</pre>
       (string/replace #&quot;^;+\\s(\\s*)&quot; &quot;\$1&quot;)
       (string/replace #&quot;^;+&quot; &quot;&quot;)))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Merge two comment sections into one.</p>
 			</div>
 			<div class="box section">
@@ -290,7 +274,7 @@ Handling of parsed forms</pre>
    :start (:start f)
    :end (:end s)})</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Parse one form. Throw exception with start line number included when an error is encountered.</p>
 			</div>
 			<div class="box section">
@@ -310,14 +294,14 @@ Handling of parsed forms</pre>
              (.setStackTrace e (.getStackTrace ex))
              (throw e))))))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>An empty comment that can be injected between other comments.</p>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(def paragraph-comment
   {:form (Comment. &quot;;;&quot;) :text [&quot;;;&quot;]})</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Merge adjacent comments together</p><p>We optionally lift inline comments to the top of the form. This monstrosity ensures that each consecutive group of inline comments is treated as a mergable block, but with a fake blank comment between non-adjacent inline comments. When merged and converted to markdown, this will produce a paragraph for each separate block of inline comments.</p>
 			</div>
 			<div class="box section">
@@ -331,7 +315,7 @@ Handling of parsed forms</pre>
         (conj cs paragraph-comment c))
       (conj cs c))))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Parse all inline comments and merge them if appropriate.</p>
 			</div>
 			<div class="box section">
@@ -347,7 +331,7 @@ Handling of parsed forms</pre>
       true
       (mapv #(assoc % :start start :end (dec start))))))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Parse all contents in reader.</p>
 			</div>
 			<div class="box section">
@@ -372,14 +356,10 @@ Handling of parsed forms</pre>
               [code]
               (vec (concat comments [code])))))))))</pre>
 			</div>
-			<div class="box section">
-				
+						<div class="box section span">
+				<hr/><h3>Getting all documentation strings</h3>
 			</div>
-			<div class="box section">
-				<pre class="brush: clojure">====================================================================================================
-Getting all documentation strings</pre>
-			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Remove the docstring from a form.</p>
 			</div>
 			<div class="box section">
@@ -395,7 +375,7 @@ Getting all documentation strings</pre>
       (string/replace #&quot;\\n\\s*\\n&quot; &quot;\\n&quot;)
       (string/replace #&quot;\\n\\s*\\)&quot; &quot;)&quot;)))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -409,7 +389,7 @@ Getting all documentation strings</pre>
       ;; HACK: to handle types
       (catch Exception _))))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -440,7 +420,7 @@ Getting all documentation strings</pre>
            (if (or (= 'ns (first form)) nspace) sym nspace-sym)]))
       [nil raw nspace-sym])))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -448,7 +428,7 @@ Getting all documentation strings</pre>
   [fn-body]
   (filter string? (rest fn-body)))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -457,7 +437,7 @@ Getting all documentation strings</pre>
   (mapcat #(extract-impl-docstring %)
           body))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -465,7 +445,7 @@ Getting all documentation strings</pre>
   (fn [form _ _]
     (if (seq? form) (first form) form)))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -479,7 +459,7 @@ Getting all documentation strings</pre>
         [ds r s]
         {:internal-docstrings internal-dses}))))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -487,7 +467,7 @@ Getting all documentation strings</pre>
   [form raw nspace-sym]
   (extract-common-docstring form raw nspace-sym))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -495,7 +475,7 @@ Getting all documentation strings</pre>
   [form raw nspace-sym]
   (extract-common-docstring form raw nspace-sym))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -503,7 +483,7 @@ Getting all documentation strings</pre>
   [form raw nspace-sym]
   (extract-common-docstring form raw nspace-sym))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -511,7 +491,7 @@ Getting all documentation strings</pre>
   [form raw nspace-sym]
   (extract-common-docstring form raw nspace-sym))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -519,7 +499,7 @@ Getting all documentation strings</pre>
   [form raw nspace-sym]
   (extract-common-docstring form raw nspace-sym))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -527,7 +507,7 @@ Getting all documentation strings</pre>
   [form raw nspace-sym]
   [nil raw nspace-sym])</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -545,7 +525,7 @@ Getting all documentation strings</pre>
             form)
     nspace-sym))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -553,7 +533,7 @@ Getting all documentation strings</pre>
   [form raw nspace-sym]
   [nil raw])</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -561,7 +541,7 @@ Getting all documentation strings</pre>
   (or (string? form) (number? form) (keyword? form) (symbol? form)
       (char? form) (true? form) (false? form) (instance? java.util.regex.Pattern form)))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -578,7 +558,7 @@ Getting all documentation strings</pre>
         :else
         (dispatch-inner-form form raw nspace-sym)))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>If the given form is a reader conditional return the inner form.</p>
 			</div>
 			<div class="box section">
@@ -588,7 +568,7 @@ Getting all documentation strings</pre>
     (.form form)
     form))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -597,14 +577,10 @@ Getting all documentation strings</pre>
         form (unpack-reader-conditional (:form m))]
     (dispatch-form form raw nspace-sym)))</pre>
 			</div>
-			<div class="box section">
-				
+						<div class="box section span">
+				<hr/><h3>Preparing results for output</h3>
 			</div>
-			<div class="box section">
-				<pre class="brush: clojure">====================================================================================================
-Preparing results for output</pre>
-			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Check if o is a comment.</p>
 			</div>
 			<div class="box section">
@@ -612,7 +588,7 @@ Preparing results for output</pre>
   [o]
   (-&gt;&gt; o :form (instance? Comment)))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Check if o is code.</p>
 			</div>
 			<div class="box section">
@@ -621,7 +597,7 @@ Preparing results for output</pre>
   (and (-&gt;&gt; o :form (instance? Comment) not)
        (-&gt;&gt; o :form nil? not)))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -687,14 +663,10 @@ Preparing results for output</pre>
                  s (first nn) (next nn) nspace)))
       sections)))</pre>
 			</div>
-			<div class="box section">
-				
+						<div class="box section span">
+				<hr/><h3>Data Onboarding Helpers</h3>
 			</div>
-			<div class="box section">
-				<pre class="brush: clojure">====================================================================================================
-Data Onboarding Helpers</pre>
-			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Make a buffered string reader for given string.</p>
 			</div>
 			<div class="box section">
@@ -704,7 +676,7 @@ Data Onboarding Helpers</pre>
     (java.io.StringReader.
       (str source-string &quot;\\n&quot;))))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Read the string into vector of lines.</p>
 			</div>
 			<div class="box section">
@@ -712,7 +684,7 @@ Data Onboarding Helpers</pre>
   [source-string]
   (vec (line-seq (buffered-string-reader source-string))))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Create a line numbering reader for given string.</p>
 			</div>
 			<div class="box section">
@@ -720,7 +692,7 @@ Data Onboarding Helpers</pre>
   [source-string]
   (clojure.lang.LineNumberingPushbackReader. (buffered-string-reader source-string)))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Handle setting all readers and parse the given source.</p>
 			</div>
 			<div class="box section">
@@ -740,7 +712,7 @@ Data Onboarding Helpers</pre>
         (set-keyword-reader nil)
         (throw e)))))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Parse the given source and prepare sections.</p>
 			</div>
 			<div class="box section">
@@ -748,7 +720,7 @@ Data Onboarding Helpers</pre>
   [source-string]
   (arrange-in-sections (parse source-string) (read-lines source-string)))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Check if a file ends with cljs</p>
 			</div>
 			<div class="box section">
@@ -756,7 +728,7 @@ Data Onboarding Helpers</pre>
   [filepath]
   (.endsWith (string/lower-case filepath) &quot;cljs&quot;))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Check if a file ends with cljx</p>
 			</div>
 			<div class="box section">
@@ -764,7 +736,7 @@ Data Onboarding Helpers</pre>
   [filepath]
   (.endsWith (string/lower-case filepath) &quot;cljx&quot;))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Check if a file ends with cljc</p>
 			</div>
 			<div class="box section">
@@ -772,7 +744,7 @@ Data Onboarding Helpers</pre>
   [filepath]
   (.endsWith (string/lower-case filepath) &quot;cljc&quot;))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				
 			</div>
 			<div class="box section">
@@ -780,7 +752,7 @@ Data Onboarding Helpers</pre>
                         '+cljc identity
                         '+cljs identity})</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Bind the data readers to ones that match the file name and execute the body.</p>
 			</div>
 			<div class="box section">
@@ -794,14 +766,10 @@ Data Onboarding Helpers</pre>
      (binding [*data-readers* readers#]
        ~@body)))</pre>
 			</div>
-			<div class="box section">
-				
+						<div class="box section span">
+				<hr/><h3>Parsing entry points</h3>
 			</div>
-			<div class="box section">
-				<pre class="brush: clojure">====================================================================================================
-Parsing entry points</pre>
-			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Parse the given file into a list of forms.</p>
 			</div>
 			<div class="box section">
@@ -810,7 +778,7 @@ Parsing entry points</pre>
   (with-readers-for filename
     (parse-into-sections (slurp filename))))</pre>
 			</div>
-			<div class="box section">
+						<div class="box section">
 				<p>Get the namespace from a file.</p>
 			</div>
 			<div class="box section">
@@ -825,6 +793,7 @@ Parsing entry points</pre>
                          (str)))
           filename))))</pre>
 			</div>
+			
 			<div class="box footer">
 				Generated by <a href="https://github.com/captain-porcelain/sidenotes">Sidenotes</a>.
 				&nbsp;&nbsp;

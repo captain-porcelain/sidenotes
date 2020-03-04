@@ -12,8 +12,8 @@
     [clojure.tools.namespace :as ctn]
     [cljs.tagged-literals :as ctl]))
 
-;; ====================================================================================================
-;; Helper functions
+;; ****************************************************************************************************
+;; ### Helper functions
 
 ;; Extracted from clojure.contrib.reflect
 (defn get-field
@@ -41,8 +41,8 @@
       (.invoke obj (into-array Object args))))
 
 
-;; ====================================================================================================
-;; Comment Handling
+;; ****************************************************************************************************
+;; ### Comment Handling
 
 ;; A simple record for holding comments.
 (defrecord Comment [content])
@@ -132,8 +132,8 @@
           :else (.unread rdr c))))
 
 
-;; ====================================================================================================
-;; Keyword Handling
+;; ****************************************************************************************************
+;; ### Keyword Handling
 
 (defrecord DoubleColonKeyword [content])
 
@@ -186,8 +186,8 @@
         reader))
 
 
-;; ====================================================================================================
-;; Handling of parsed forms
+;; ****************************************************************************************************
+;; ### Handling of parsed forms
 
 (defn adjacent?
   "Check if two sections are adjacent."
@@ -283,8 +283,8 @@
               (vec (concat comments [code])))))))))
 
 
-;; ====================================================================================================
-;; Getting all documentation strings
+;; ****************************************************************************************************
+;; ### Getting all documentation strings
 
 (defn strip-docstring
   "Remove the docstring from a form."
@@ -432,8 +432,8 @@
     (dispatch-form form raw nspace-sym)))
 
 
-;; ====================================================================================================
-;; Preparing results for output
+;; ****************************************************************************************************
+;; ### Preparing results for output
 
 (defn comment?
   "Check if o is a comment."
@@ -514,8 +514,8 @@
       sections)))
 
 
-;; ====================================================================================================
-;; Data Onboarding Helpers
+;; ****************************************************************************************************
+;; ### Data Onboarding Helpers
 
 (defn buffered-string-reader
   "Make a buffered string reader for given string."
@@ -587,8 +587,8 @@
        ~@body)))
 
 
-;; ====================================================================================================
-;; Parsing entry points
+;; ****************************************************************************************************
+;; ### Parsing entry points
 
 (defn parse-file
   "Parse the given file into a list of forms."

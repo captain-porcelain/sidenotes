@@ -34,8 +34,8 @@
   "Transform the comments and parse contained markdown."
   [section]
   (case (:type section)
-    :code (assoc section :docstring (md/md-to-html-string (:docstring section)))
-    :comment (assoc section :docstring (md/md-to-html-string (:raw section)) :raw "")))
+    :code (assoc section :docstring (md/md-to-html-string (:docstring section)) :span false)
+    :comment (assoc section :docstring (md/md-to-html-string (:raw section)) :raw "" :span true)))
 
 (defn transform-parsed-source
   "Transform the comments and parse contained markdown."
