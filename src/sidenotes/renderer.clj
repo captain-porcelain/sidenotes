@@ -69,7 +69,8 @@
   "Render the table of contents."
   [parsed-sources project settings readme theme]
   (let [toc-template (fs/slurp-resource (str theme "/toc.html"))
-        filename (str (:output-to settings) "/toc.html")
+        filename (str (:output-to settings) "/" (:toc-filename settings))
+        tmp (dorun (println (str "Creating table of contents: " filename)))
         params (toc-template-parameters parsed-sources project settings readme)]
     (spit filename (mustache/render toc-template params))))
 
@@ -78,6 +79,7 @@
   [parsed-source project settings theme]
   (let [toc-template (fs/slurp-resource (str theme "/ns.html"))
         filename (str (:output-to settings) "/" (:ns parsed-source) ".html")
+        tmp (dorun (println (str " ... rendering to " filename)))
         params (ns-template-parameters parsed-source project settings)]
     (spit filename (mustache/render toc-template params))))
 
@@ -95,6 +97,7 @@
   [parsed-sources project settings readme]
   (let [theme (find-theme (:theme settings))]
     (copy-resources settings theme)
+    (dorun (map #(render-ns % project settings theme) parsed-sources))
     (render-toc parsed-sources project settings readme theme)
-    (dorun (map #(render-ns % project settings theme) parsed-sources))))
+    ))
 

@@ -18,7 +18,7 @@
 		<div class="gridlayout">
 			<div class="box header">
 				<h1 class="project-name">sidenotes.renderer</h1>
-				<a class="toc-link" href="toc.html">table of contents</a>
+				<a class="toc-link" href="index.html">table of contents</a>
 			</div>
 			<div class="box section">
 				<p>The renderer is responsible for converting parsed contents into html files. It uses clostache templates from a selectable theme folder to create them.</p>
@@ -122,7 +122,8 @@
 				<pre class="brush: clojure">(defn render-toc
   [parsed-sources project settings readme theme]
   (let [toc-template (fs/slurp-resource (str theme &quot;/toc.html&quot;))
-        filename (str (:output-to settings) &quot;/toc.html&quot;)
+        filename (str (:output-to settings) &quot;/&quot; (:toc-filename settings))
+        tmp (dorun (println (str &quot;Creating table of contents: &quot; filename)))
         params (toc-template-parameters parsed-sources project settings readme)]
     (spit filename (mustache/render toc-template params))))</pre>
 			</div>
@@ -134,6 +135,7 @@
   [parsed-source project settings theme]
   (let [toc-template (fs/slurp-resource (str theme &quot;/ns.html&quot;))
         filename (str (:output-to settings) &quot;/&quot; (:ns parsed-source) &quot;.html&quot;)
+        tmp (dorun (println (str &quot; ... rendering to &quot; filename)))
         params (ns-template-parameters parsed-source project settings)]
     (spit filename (mustache/render toc-template params))))</pre>
 			</div>
@@ -157,8 +159,8 @@
   [parsed-sources project settings readme]
   (let [theme (find-theme (:theme settings))]
     (copy-resources settings theme)
-    (render-toc parsed-sources project settings readme theme)
-    (dorun (map #(render-ns % project settings theme) parsed-sources))))</pre>
+    (dorun (map #(render-ns % project settings theme) parsed-sources))
+    (render-toc parsed-sources project settings readme theme)))</pre>
 			</div>
 			
 			<div class="box footer">

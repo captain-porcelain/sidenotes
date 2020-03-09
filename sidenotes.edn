@@ -1,4 +1,5 @@
 {:projectname "Sidenotes"
  :description "Clojure documentation generator"
  :output-to "docs"
+ :toc-filename "index.html"
  :theme "sidenotes"}

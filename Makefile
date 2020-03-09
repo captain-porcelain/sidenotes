@@ -6,6 +6,7 @@ build: repl
 clean:
 		rm -rf pom.xml
 		rm -rf target/
+		rm -rf docs/*
 
 package:
 		clojure -A:cambada -m cambada.jar -m sidenotes.core --app-version $(VERSION)

@@ -2,7 +2,7 @@
 
 A clojure documentation generator forked from [marginalia](https://github.com/gdeer81/marginalia/)
 
-The documentation for sidenotes itself can be found [here](https://captain-porcelain.github.io/sidenotes/toc.html)
+The documentation for sidenotes itself can be found [here](https://captain-porcelain.github.io/sidenotes/index.html)
 
 ## Features
 
@@ -13,6 +13,7 @@ In the current early version the following features are supported:
 - One html file per namespace showing code and comments side by side
 - Support for markdown in comments
 - Disabling / Enabling adding comments to the documentation with @SidenotesDisable and @SidenotesEnable inside comments
+- Choosing the filename for the table of contents
 
 ## Differences to Marginalia
 
@@ -50,6 +51,7 @@ read for the current folder.
 {:projectname "Sidenotes"
  :description "Clojure documentation generator"
  :output-to "docs"
+ :toc-filename "index.html"
  :theme "marginalia or sidenotes"}
 ```
 
@@ -57,4 +59,3 @@ read for the current folder.
 
 - Enable external themes
 - Add a setting for inclusion of the readme
-- Add a setting for the toc.html filename, or name it index.html intead

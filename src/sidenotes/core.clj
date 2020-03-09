@@ -26,6 +26,7 @@
 (def default-settings
   {:description "Add description in sidenotes.edn..."
    :output-to "docs"
+   :toc-filename "toc.html"
    :theme "marginalia"})
 
 (defn read-settings
@@ -47,8 +48,8 @@
   "Parse one source file."
   [source]
   (let [sections (parser/parse-file source)
-        result-msg (if (nil? (:error sections)) " ... Done" (str " ... Error: " (:error sections)))
-        tmp (dorun (println (str "\t" (fs/shorten source) result-msg)))
+        result-msg (if (nil? (:error sections)) " ... parsed" (str " ... error: " (:error sections)))
+        tmp (dorun (print (str "\t" (fs/shorten source) result-msg)))
         ns (parser/parse-ns source)]
     {:file source
      :sections sections
@@ -57,7 +58,7 @@
 (defn parse-sources
   "Create a list of parsed source files."
   [sources]
-  (dorun (println "Beginning to parse files:"))
+  (dorun (println "Generating docs for:"))
   (map parse-source sources))
 
 (defn -main

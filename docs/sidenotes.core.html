@@ -18,7 +18,7 @@
 		<div class="gridlayout">
 			<div class="box header">
 				<h1 class="project-name">sidenotes.core</h1>
-				<a class="toc-link" href="toc.html">table of contents</a>
+				<a class="toc-link" href="index.html">table of contents</a>
 			</div>
 			<div class="box section">
 				<p>The entry point for generating documentation with sidenotes.core</p><p>Since all configuration is done with a sidenotes.edn file in the project there is not much that needs to be done here.</p><p>The actual usage is to call the main function inside the project root. I expect this to be done via an alias in deps.edn as outlined in the README.</p>
@@ -49,6 +49,7 @@
 				<pre class="brush: clojure">(def default-settings
   {:description &quot;Add description in sidenotes.edn...&quot;
    :output-to &quot;docs&quot;
+   :toc-filename &quot;toc.html&quot;
    :theme &quot;marginalia&quot;})</pre>
 			</div>
 						<div class="box section">
@@ -79,8 +80,8 @@
 				<pre class="brush: clojure">(defn parse-source
   [source]
   (let [sections (parser/parse-file source)
-        result-msg (if (nil? (:error sections)) &quot; ... Done&quot; (str &quot; ... Error: &quot; (:error sections)))
-        tmp (dorun (println (str &quot;\\t&quot; (fs/shorten source) result-msg)))
+        result-msg (if (nil? (:error sections)) &quot; ... parsed&quot; (str &quot; ... error: &quot; (:error sections)))
+        tmp (dorun (print (str &quot;\\t&quot; (fs/shorten source) result-msg)))
         ns (parser/parse-ns source)]
     {:file source
      :sections sections
@@ -92,7 +93,7 @@
 			<div class="box section">
 				<pre class="brush: clojure">(defn parse-sources
   [sources]
-  (dorun (println &quot;Beginning to parse files:&quot;))
+  (dorun (println &quot;Generating docs for:&quot;))
   (map parse-source sources))</pre>
 			</div>
 						<div class="box section">
