@@ -78,9 +78,13 @@
 			<div class="box section">
 				<pre class="brush: clojure">(defn parse-source
   [source]
-  {:file source
-   :sections (parser/parse-file source)
-   :ns (parser/parse-ns source)})</pre>
+  (let [sections (parser/parse-file source)
+        result-msg (if (nil? (:error sections)) &quot; ... Done&quot; (str &quot; ... Error: &quot; (:error sections)))
+        tmp (dorun (println (str &quot;\\t&quot; (fs/shorten source) result-msg)))
+        ns (parser/parse-ns source)]
+    {:file source
+     :sections sections
+     :ns ns}))</pre>
 			</div>
 						<div class="box section">
 				<p>Create a list of parsed source files.</p>
@@ -88,6 +92,7 @@
 			<div class="box section">
 				<pre class="brush: clojure">(defn parse-sources
   [sources]
+  (dorun (println &quot;Beginning to parse files:&quot;))
   (map parse-source sources))</pre>
 			</div>
 						<div class="box section">

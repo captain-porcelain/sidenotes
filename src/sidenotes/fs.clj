@@ -39,6 +39,12 @@
   [path]
   (.isDirectory (java.io.File. path)))
 
+(defn shorten
+  "Shorten full file path by removing current dir prefix."
+  [path]
+  (let [pwd (.getAbsolutePath (java.io.File. ""))]
+    (if (.startsWith path pwd) (.substring path (inc (count pwd))) path)))
+
 (defn find-file-extension
   "Returns a string containing the files extension."
   [^java.io.File file]

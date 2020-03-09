@@ -76,6 +76,15 @@
   (.isDirectory (java.io.File. path)))</pre>
 			</div>
 						<div class="box section">
+				<p>Shorten full file path by removing current dir prefix.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn shorten
+  [path]
+  (let [pwd (.getAbsolutePath (java.io.File. &quot;&quot;))]
+    (if (.startsWith path pwd) (.substring path (inc (count pwd))) path)))</pre>
+			</div>
+						<div class="box section">
 				<p>Returns a string containing the files extension.</p>
 			</div>
 			<div class="box section">

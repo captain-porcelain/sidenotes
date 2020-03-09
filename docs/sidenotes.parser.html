@@ -775,8 +775,10 @@
 			<div class="box section">
 				<pre class="brush: clojure">(defn parse-file
   [filename]
-  (with-readers-for filename
-    (parse-into-sections (slurp filename))))</pre>
+  (try
+    (with-readers-for filename
+      (parse-into-sections (slurp filename)))
+    (catch Exception e {:error (.getMessage e)})))</pre>
 			</div>
 						<div class="box section">
 				<p>Get the namespace from a file.</p>

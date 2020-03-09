@@ -593,8 +593,10 @@
 (defn parse-file
   "Parse the given file into a list of forms."
   [filename]
-  (with-readers-for filename
-    (parse-into-sections (slurp filename))))
+  (try
+    (with-readers-for filename
+      (parse-into-sections (slurp filename)))
+    (catch Exception e {:error (.getMessage e)})))
 
 (defn parse-ns
   "Get the namespace from a file."

@@ -46,13 +46,18 @@
 (defn parse-source
   "Parse one source file."
   [source]
-  {:file source
-   :sections (parser/parse-file source)
-   :ns (parser/parse-ns source)})
+  (let [sections (parser/parse-file source)
+        result-msg (if (nil? (:error sections)) " ... Done" (str " ... Error: " (:error sections)))
+        tmp (dorun (println (str "\t" (fs/shorten source) result-msg)))
+        ns (parser/parse-ns source)]
+    {:file source
+     :sections sections
+     :ns ns}))
 
 (defn parse-sources
   "Create a list of parsed source files."
   [sources]
+  (dorun (println "Beginning to parse files:"))
   (map parse-source sources))
 
 (defn -main
