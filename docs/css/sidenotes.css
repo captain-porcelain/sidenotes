@@ -4,7 +4,7 @@ body {
 }
 
 a, a:link, a:hover, a:visited, a:active {
-	color: #89ff82;
+	color: #9d74e3;
     text-decoration: none;
 }
 
@@ -50,6 +50,22 @@ a, a:link, a:hover, a:visited, a:active {
 .list > a:visited,
 .list > a:active {
 	color: #151413;
+}
+
+.header > a,
+.header > a:link,
+.header > a:hover,
+.header > a:visited,
+.header > a:active {
+	color: #89ff82;
+}
+
+.footer > a,
+.footer > a:link,
+.footer > a:hover,
+.footer > a:visited,
+.footer > a:active {
+	color: #89ff82;
 }
 
 .footer {
