@@ -29,6 +29,7 @@
     [sidenotes.fs :as fs]
     [markdown.core :as md]
     [clojure.edn :as edn]
+    [clojure.string :as string]
     [clostache.parser :as mustache]))</pre>
 			</div>
 						<div class="box section">
@@ -67,12 +68,29 @@
   (map transform-dependency deps))</pre>
 			</div>
 						<div class="box section">
+				<p>Get markdown for an error.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn error-md
+  [section]
+  (str &quot;###ERROR\\n&quot; (:error section)))</pre>
+			</div>
+						<div class="box section">
+				<p>Convert stacktrace to code.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn stacktrace-code
+  [exception]
+  (string/join &quot;\\n&quot; (map str (.getStackTrace exception))))</pre>
+			</div>
+						<div class="box section">
 				<p>Transform the comments and parse contained markdown.</p>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(defn transform-section
   [section]
   (case (:type section)
+    :error (assoc section :docstring (md/md-to-html-string (error-md section)) :raw (stacktrace-code (:exception section)))
     :code (assoc section :docstring (md/md-to-html-string (:docstring section)) :span false)
     :comment (assoc section :docstring (md/md-to-html-string (:raw section)) :raw &quot;&quot; :span true)))</pre>
 			</div>

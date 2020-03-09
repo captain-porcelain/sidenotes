@@ -5,6 +5,7 @@
     [sidenotes.fs :as fs]
     [markdown.core :as md]
     [clojure.edn :as edn]
+    [clojure.string :as string]
     [clostache.parser :as mustache]))
 
 (def theme-base "themes/")
@@ -30,10 +31,21 @@
   [deps]
   (map transform-dependency deps))
 
+(defn error-md
+  "Get markdown for an error."
+  [section]
+  (str "###ERROR\n" (:error section)))
+
+(defn stacktrace-code
+  "Convert stacktrace to code."
+  [exception]
+  (string/join "\n" (map str (.getStackTrace exception))))
+
 (defn transform-section
   "Transform the comments and parse contained markdown."
   [section]
   (case (:type section)
+    :error (assoc section :docstring (md/md-to-html-string (error-md section)) :raw (stacktrace-code (:exception section)))
     :code (assoc section :docstring (md/md-to-html-string (:docstring section)) :span false)
     :comment (assoc section :docstring (md/md-to-html-string (:raw section)) :raw "" :span true)))
 

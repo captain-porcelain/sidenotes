@@ -778,7 +778,9 @@
   (try
     (with-readers-for filename
       (parse-into-sections (slurp filename)))
-    (catch Exception e {:error (.getMessage e)})))</pre>
+    (catch Exception e [{:type :error
+                        :error (.getMessage e)
+                        :exception e}])))</pre>
 			</div>
 						<div class="box section">
 				<p>Get the namespace from a file.</p>

@@ -596,7 +596,9 @@
   (try
     (with-readers-for filename
       (parse-into-sections (slurp filename)))
-    (catch Exception e {:error (.getMessage e)})))
+    (catch Exception e [{:type :error
+                        :error (.getMessage e)
+                        :exception e}])))
 
 (defn parse-ns
   "Get the namespace from a file."

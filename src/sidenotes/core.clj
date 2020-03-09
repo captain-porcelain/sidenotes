@@ -48,7 +48,7 @@
   "Parse one source file."
   [source]
   (let [sections (parser/parse-file source)
-        result-msg (if (nil? (:error sections)) " ... parsed" (str " ... error: " (:error sections)))
+        result-msg (if (nil? (:error (first sections))) " ... parsed" (str " ... error: " (:error (first sections))))
         tmp (dorun (print (str "\t" (fs/shorten source) result-msg)))
         ns (parser/parse-ns source)]
     {:file source

@@ -80,7 +80,7 @@
 				<pre class="brush: clojure">(defn parse-source
   [source]
   (let [sections (parser/parse-file source)
-        result-msg (if (nil? (:error sections)) &quot; ... parsed&quot; (str &quot; ... error: &quot; (:error sections)))
+        result-msg (if (nil? (:error (first sections))) &quot; ... parsed&quot; (str &quot; ... error: &quot; (:error (first sections))))
         tmp (dorun (print (str &quot;\\t&quot; (fs/shorten source) result-msg)))
         ns (parser/parse-ns source)]
     {:file source
