@@ -6,4 +6,7 @@
   "js/xregexp-min.js"
   "js/shCore.js"
   "js/shBrushClojure.js"
-  "js/app.js"]}
+  "js/app.js"
+  "img/spacer.svg"
+  "img/cljs-white.svg"
+  "img/Clojure_logo.svg"]}

@@ -100,7 +100,11 @@
 			<div class="box section">
 				<pre class="brush: clojure">(defn transform-parsed-source
   [parsed-source]
-  (assoc parsed-source :sections (map transform-section (:sections parsed-source))))</pre>
+  (assoc parsed-source
+         :sections (map transform-section (:sections parsed-source))
+         :is-cljs (= &quot;cljs&quot; (:type parsed-source))
+         :is-cljc (= &quot;cljc&quot; (:type parsed-source))
+         :is-clj  (= &quot;clj&quot; (:type parsed-source))))</pre>
 			</div>
 						<div class="box section">
 				<p>Check if a readme exists and contains markdown. If so convert it to html.</p>
@@ -121,7 +125,7 @@
   {:settings settings
    :dependencies (transform-dependencies (:deps project))
    :readme (transform-readme readme)
-   :sources parsed-sources})</pre>
+   :sources (map transform-parsed-source parsed-sources)})</pre>
 			</div>
 						<div class="box section">
 				<p>Build the parameters for the mustache templates.</p>

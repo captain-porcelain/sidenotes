@@ -52,7 +52,11 @@
 (defn transform-parsed-source
   "Transform the comments and parse contained markdown."
   [parsed-source]
-  (assoc parsed-source :sections (map transform-section (:sections parsed-source))))
+  (assoc parsed-source
+         :sections (map transform-section (:sections parsed-source))
+         :is-cljs (= "cljs" (:type parsed-source))
+         :is-cljc (= "cljc" (:type parsed-source))
+         :is-clj  (= "clj" (:type parsed-source))))
 
 (defn transform-readme
   "Check if a readme exists and contains markdown. If so convert it to html."
@@ -67,7 +71,7 @@
   {:settings settings
    :dependencies (transform-dependencies (:deps project))
    :readme (transform-readme readme)
-   :sources parsed-sources})
+   :sources (map transform-parsed-source parsed-sources)})
 
 (defn ns-template-parameters
   "Build the parameters for the mustache templates."

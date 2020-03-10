@@ -8,6 +8,11 @@ a, a:link, a:hover, a:visited, a:active {
     text-decoration: none;
 }
 
+.cljlogo {
+	height: 16px;
+	vertical-align: middle;
+}
+
 .gridlayout {
 	display: grid;
 	width: 100%;

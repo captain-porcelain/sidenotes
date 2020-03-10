@@ -36,7 +36,21 @@
 			</div>
 			{{#sources}}
 			<div class="box list">
-				<a href="{{ns}}.html">{{ns}}</a>
+				<div>
+					{{#is-clj}}
+					<img src="img/Clojure_logo.svg" class="cljlogo">
+					<img src="img/spacer.svg" class="cljlogo">
+					{{/is-clj}}
+					{{#is-cljs}}
+					<img src="img/spacer.svg" class="cljlogo">
+					<img src="img/cljs-white.svg" class="cljlogo">
+					{{/is-cljs}}
+					{{#is-cljc}}
+					<img src="img/Clojure_logo.svg" class="cljlogo">
+					<img src="img/cljs-white.svg" class="cljlogo">
+					{{/is-cljc}}
+					<a href="{{ns}}.html">{{ns}}</a>
+				</div>
 			</div>
 			{{/sources}}
 			<div class="box footer">

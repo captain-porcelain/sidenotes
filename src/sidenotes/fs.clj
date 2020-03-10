@@ -45,10 +45,15 @@
   (let [pwd (.getAbsolutePath (java.io.File. ""))]
     (if (.startsWith path pwd) (.substring path (inc (count pwd))) path)))
 
-(defn find-file-extension
+(defn file-extension
   "Returns a string containing the files extension."
+  [filename]
+  (second (re-find #"\.([^.]+)$" filename)))
+
+(defn find-file-extension
+  "Returns a string containing the files extension for a File instance."
   [^java.io.File file]
-  (second (re-find #"\.([^.]+)$" (.getName file))))
+  (file-extension (.getName file)))
 
 (defn processable-file?
   "Predicate. Returns true for \"normal\" files with a file extension which

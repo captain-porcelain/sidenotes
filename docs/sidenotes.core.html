@@ -84,8 +84,9 @@
         tmp (dorun (print (str &quot;\\t&quot; (fs/shorten source) result-msg)))
         ns (parser/parse-ns source)]
     {:file source
-     :sections sections
-     :ns ns}))</pre>
+     :sections (parser/parse-file source)
+     :type (fs/file-extension source)
+     :ns (parser/parse-ns source)}))</pre>
 			</div>
 						<div class="box section">
 				<p>Create a list of parsed source files.</p>

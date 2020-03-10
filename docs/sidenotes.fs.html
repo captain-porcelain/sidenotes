@@ -88,9 +88,17 @@
 				<p>Returns a string containing the files extension.</p>
 			</div>
 			<div class="box section">
+				<pre class="brush: clojure">(defn file-extension
+  [filename]
+  (second (re-find #&quot;\\.([^.]+)\$&quot; filename)))</pre>
+			</div>
+						<div class="box section">
+				<p>Returns a string containing the files extension for a File instance.</p>
+			</div>
+			<div class="box section">
 				<pre class="brush: clojure">(defn find-file-extension
   [^java.io.File file]
-  (second (re-find #&quot;\\.([^.]+)\$&quot; (.getName file))))</pre>
+  (file-extension (.getName file)))</pre>
 			</div>
 						<div class="box section">
 				<p>Predicate. Returns true for "normal" files with a file extension which passes the provided predicate.</p>

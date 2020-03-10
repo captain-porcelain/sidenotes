@@ -52,8 +52,9 @@
         tmp (dorun (print (str "\t" (fs/shorten source) result-msg)))
         ns (parser/parse-ns source)]
     {:file source
-     :sections sections
-     :ns ns}))
+     :sections (parser/parse-file source)
+     :type (fs/file-extension source)
+     :ns (parser/parse-ns source)}))
 
 (defn parse-sources
   "Create a list of parsed source files."
