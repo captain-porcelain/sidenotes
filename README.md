@@ -11,7 +11,7 @@ The documentation for sidenotes itself can be found [here](https://captain-porce
 
 It is limited to projects that use deps.edn.
 
-In the current early version the following features are supported:
+Currently the following features are supported:
 - Generating table of contents containing dependencies and namespaces
 - One html file per namespace showing code and comments side by side
 - Support for markdown in comments
