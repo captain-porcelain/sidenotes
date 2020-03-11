@@ -71,6 +71,7 @@ read for the current folder. Other settings are available as well:
 | `:theme` | The theme to use. Defaults to `marginalia` |
 |  | Select `marginalia` if you want it similar to what [marginalia](https://github.com/gdeer81/marginalia/) generates |
 |  | Select `sidenotes` if you want the new css grid based layout with new features |
+|  | Or configure the path to your own theme for more flexibility in rendering the documentation |
 
 ## External Themes
 
