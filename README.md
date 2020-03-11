@@ -14,6 +14,7 @@ In the current early version the following features are supported:
 - Support for markdown in comments
 - Disabling / Enabling adding comments to the documentation with `@SidenotesDisable` and `@SidenotesEnable` inside comments
 - Choosing the filename for the table of contents
+- Support for external themes
 
 ## Differences to Marginalia
 
@@ -24,6 +25,7 @@ In the current early version the following features are supported:
 - Uses clostache/mustache for templating
 - A new theme `sidenotes` in addition to the classic `marginalia`
 - Inclusion of the project readme in the table of contents page if it is written in markdown
+- Support for external themes
 
 ## Usage and Configuration
 
@@ -67,6 +69,42 @@ read for the current folder. Other settings are available as well:
 |  | Select `marginalia` if you want it similar to what [marginalia](https://github.com/gdeer81/marginalia/) generates |
 |  | Select `sidenotes` if you want the new css grid based layout with new features |
 
+## External Themes
+
+Sidenotes is able to use your own theme in addition to the included ones.
+
+If you'd like to create your own you need three files for it:
+
+### `toc.html`
+
+A mustache template that renders the table of contents. It is a good idea to start with the template in the `sidenotes` theme to
+see which parameters it takes to build the table of contents.
+
+### `ns.html`
+
+A mustache template that is used for every namespace. Again it is wise to start with the existing one.
+
+### `theme.edn`
+
+In case your theme uses additional resources like css, JavaScript or images this file need to contain references to them, so
+sidenotes knows to copy them into the output folder. It should look like this:
+
+```clojure
+{:resources
+ ["css/sidenotes.css"
+  "css/shCore.css"
+  "css/shThemeSidenotes.css"
+  "js/jquery-1.7.1.min.js"
+  "js/xregexp-min.js"
+  "js/shCore.js"
+  "js/shBrushClojure.js"
+  "js/app.js"
+  "img/spacer.svg"
+  "img/cljs-white.svg"
+  "img/Clojure_logo.svg"]}
+```
+
 ## Future Work
 
-- Enable external themes
+Currently I have no features in mind that need to be added to sidenotes. If you would like to see
+something let me know about it or create a pull request for it.
