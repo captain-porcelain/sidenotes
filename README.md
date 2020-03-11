@@ -45,17 +45,28 @@ clojure -A:sidenotes
 
 This will create the documentation in a folder called docs. You can change this by creating a file sidenotes.edn
 in your project root. It can also be used to add a project name and description. The project name is otherwise
-read for the current folder.
+read for the current folder. Other settings are available as well:
 
 ```clojure
 {:projectname "Sidenotes"
  :description "Clojure documentation generator"
  :output-to "docs"
  :toc-filename "index.html"
+ :include-readme true
  :theme "marginalia or sidenotes"}
 ```
+
+| Setting | Description |
+| ------- | ----------- |
+| :projectname | Sets the name of the project in the table of contents page |
+| :description | Sets the description of the project in the table of contents page |
+| :output-to | The folder the documentation will be written to, default to docs |
+| :toc-filename | The filename of the table of contents page. Defaults to toc.html |
+| :include-readme | Include the readme (if it is markdown) in the table of contents page. Available only in sidenotes theme |
+| :theme | The theme to use. Defaults to marginalia |
+|  | Select marginalia if you want it similar to what [marginalia](https://github.com/gdeer81/marginalia/) generated |
+|  | Select sidenotes if you want the new css grid based layout with new features |
 
 ## Future Work
 
 - Enable external themes
-- Add a setting for inclusion of the readme

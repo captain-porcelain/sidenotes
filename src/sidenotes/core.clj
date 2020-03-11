@@ -27,6 +27,7 @@
   {:description "Add description in sidenotes.edn..."
    :output-to "docs"
    :toc-filename "toc.html"
+   :include-readme true
    :theme "marginalia"})
 
 (defn read-settings

@@ -13,7 +13,7 @@
 				<h1>Sidenotes</h1>
 				<h2>Clojure documentation generator</h2>
 			</div>
-			<div class="box subheader">
+						<div class="box subheader">
 				<h3>Readme</h3>
 			</div>
 			<div class="box list"><h1>Sidenotes</h1><p>A clojure documentation generator forked from <a href='https://github.com/gdeer81/marginalia/'>marginalia</a></p><p>The documentation for sidenotes itself can be found <a href='https://captain-porcelain.github.io/sidenotes/index.html'>here</a></p><h2>Features</h2><p>It is limited to projects that use deps.edn.</p><p>In the current early version the following features are supported:</p><ul><li>Generating table of contents containing dependencies and namespaces</li><li>One html file per namespace showing code and comments side by side</li><li>Support for markdown in comments</li><li>Disabling / Enabling adding comments to the documentation with @SidenotesDisable and @SidenotesEnable inside comments</li><li>Choosing the filename for the table of contents</li></ul><h2>Differences to Marginalia</h2><ul><li>Limited to projects using deps.edn</li><li>No Latex output</li><li>No uberdoc output</li><li>Javascript and CSS are not injected into html files but kept separate</li><li>Uses clostache/mustache for templating</li><li>A new theme <code>sidenotes</code> in addition to the classic <code>marginalia</code></li><li>Inclusion of the project readme in the table of contents page if it is written in markdown</li></ul><h2>Usage and Configuration</h2><p>Add an alias to your deps.edn file</p><pre><code class="clojure">:sidenotes
@@ -22,12 +22,14 @@
 :main-opts  &#91;&quot;-m&quot; &quot;sidenotes.core&quot;&#93;}
 </code></pre><p>and call it</p><pre><code class="bash">clojure -A:sidenotes
 
-</code></pre><p>This will create the documentation in a folder called docs. You can change this by creating a file sidenotes.edn in your project root. It can also be used to add a project name and description. The project name is otherwise read for the current folder.</p><pre><code class="clojure">{:projectname &quot;Sidenotes&quot;
+</code></pre><p>This will create the documentation in a folder called docs. You can change this by creating a file sidenotes.edn in your project root. It can also be used to add a project name and description. The project name is otherwise read for the current folder. Other settings are available as well:</p><pre><code class="clojure">{:projectname &quot;Sidenotes&quot;
  :description &quot;Clojure documentation generator&quot;
  :output-to &quot;docs&quot;
  :toc-filename &quot;index.html&quot;
+ :include-readme true
  :theme &quot;marginalia or sidenotes&quot;}
-</code></pre><h2>Future Work</h2><ul><li>Enable external themes</li><li>Add a setting for inclusion of the readme</li></ul></div>
+</code></pre><table><thead><tr><th>Setting</th><th>Description</th></tr></thead><tbody><tr><td>:projectname</td><td>Sets the name of the project in the table of contents page</td></tr><tr><td>:description</td><td>Sets the description of the project in the table of contents page</td></tr><tr><td>:output-to</td><td>The folder the documentation will be written to, default to docs</td></tr><tr><td>:toc-filename</td><td>The filename of the table of contents page. Defaults to toc.html</td></tr><tr><td>:include-readme</td><td>Include the readme (if it is markdown) in the table of contents page. Available only in sidenotes theme</td></tr><tr><td>:theme</td><td>The theme to use. Defaults to marginalia</td></tr><tr><td></td><td>Select marginalia if you want it similar to what <a href='https://github.com/gdeer81/marginalia/'>marginalia</a> generated</td></tr><tr><td></td><td>Select sidenotes if you want the new css grid based layout with new features</td></tr></tbody></table><h2>Future Work</h2><ul><li>Enable external themes</li></ul></div>
+			
 			<div class="box subheader">
 				<h3>Dependencies</h3>
 			</div>

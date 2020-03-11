@@ -14,10 +14,12 @@
 				<h2>{{settings.description}}</h2>
 			</div>
 			{{#readme.has-readme}}
+			{{#settings.include-readme}}
 			<div class="box subheader">
 				<h3>Readme</h3>
 			</div>
 			<div class="box list">{{{readme.html}}}</div>
+			{{/settings.include-readme}}
 			{{/readme.has-readme}}
 			<div class="box subheader">
 				<h3>Dependencies</h3>

@@ -2,4 +2,5 @@
  :description "Clojure documentation generator"
  :output-to "docs"
  :toc-filename "index.html"
+ :include-readme true
  :theme "sidenotes"}
