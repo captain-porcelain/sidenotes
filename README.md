@@ -1,6 +1,9 @@
 # Sidenotes
 
-A clojure documentation generator forked from [marginalia](https://github.com/gdeer81/marginalia/)
+[![Clojars Project](https://img.shields.io/clojars/v/sidenotes.svg)](https://clojars.org/sidenotes)
+
+A clojure documentation generator forked from [marginalia](https://github.com/gdeer81/marginalia/) that displays
+code and comments side by side.
 
 The documentation for sidenotes itself can be found [here](https://captain-porcelain.github.io/sidenotes/index.html)
 
