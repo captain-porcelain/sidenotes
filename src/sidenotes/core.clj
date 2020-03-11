@@ -63,14 +63,33 @@
   (dorun (println "Generating docs for:"))
   (map parse-source sources))
 
-(defn -main
-  "Generate the documentation."
-  [& args]
+(defn generate-documentation
+  "Generate the documentation without further checks."
+  [settings]
   (try
-    (let [settings (load-settings "sidenotes.edn")
-          project (read-deps "deps.edn")
+    (let [project (read-deps "deps.edn")
           readme (fs/load-readme)
           sources (fs/find-sources (:paths project))
           parsed-sources (parse-sources sources)]
       (renderer/render parsed-sources project settings readme))
+    (catch Exception e (.printStackTrace e))))
+
+(defn perform-checks
+  "Check that the config is valid."
+  [settings]
+  (if (renderer/external-theme? (:theme settings))
+    (if (renderer/external-theme-valid? (:theme settings))
+      true
+      (do
+        (dorun (println renderer/message-theme-invalid))
+        false))
+    true))
+
+(defn -main
+  "Generate the documentation."
+  [& args]
+  (try
+    (let [settings (load-settings "sidenotes.edn")]
+      (when (perform-checks settings)
+        (generate-documentation settings)))
     (catch Exception e (.printStackTrace e))))

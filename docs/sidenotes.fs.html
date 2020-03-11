@@ -200,7 +200,18 @@
 				<pre class="brush: clojure">(defn spit-resource
   [resource from to]
   (ensure-directory! (str to &quot;/&quot; (string/join &quot;/&quot; (butlast (string/split resource #&quot;/&quot;)))))
+  (dorun (println (str &quot;\\t&quot; resource &quot; to &quot; to)))
   (spit (str to &quot;/&quot; resource) (slurp-resource (str from &quot;/&quot; resource))))</pre>
+			</div>
+						<div class="box section">
+				<p>Copy a file to the output folder.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn copy-file
+  [file from to]
+  (ensure-directory! (str to &quot;/&quot; (string/join &quot;/&quot; (butlast (string/split file #&quot;/&quot;)))))
+  (dorun (println (str &quot;\\t&quot; file &quot; to &quot; to)))
+  (io/copy (io/file (str from &quot;/&quot; file)) (io/file (str to &quot;/&quot; file))))</pre>
 			</div>
 			
 			<div class="box footer">

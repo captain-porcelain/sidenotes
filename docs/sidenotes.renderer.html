@@ -33,18 +33,64 @@
     [clostache.parser :as mustache]))</pre>
 			</div>
 						<div class="box section">
-				
+				<p>The folder where internal themes can be found.</p>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(def theme-base &quot;themes/&quot;)</pre>
 			</div>
 						<div class="box section">
-				<p>Find and the path to the used theme.</p>
+				<p>The list of internal themes. It would be much nicer if this could be automatically read from the resources of the jar, but so far I have no idea how that could be done.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(def internal-themes [&quot;marginalia&quot; &quot;sidenotes&quot;])</pre>
+			</div>
+						<div class="box section">
+				<p>Check that itm is not in itms.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn in?
+  [itm itms]
+  (not (false? (nil? (some #(= itm %) itms)))))</pre>
+			</div>
+						<div class="box section">
+				<p>Check if an external theme is sane. It needs to have theme.edn, toc.html and ns.html files.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn external-theme-valid?
+  [theme-name]
+  (and
+    (fs/dir? theme-name)
+    (fs/file? (str theme-name &quot;/theme.edn&quot;))
+    (fs/file? (str theme-name &quot;/toc.html&quot;))
+    (fs/file? (str theme-name &quot;/ns.html&quot;))))</pre>
+			</div>
+						<div class="box section">
+				
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(def message-theme-invalid
+  &quot;The theme you have provided is not valid. Make sure that it contains the following files:
+  theme.edn
+  toc.html
+  ns.html&quot;)</pre>
+			</div>
+						<div class="box section">
+				<p>Check if the provided theme is external.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn external-theme?
+  [theme-name]
+  (in? theme-name internal-themes))</pre>
+			</div>
+						<div class="box section">
+				<p>Find the path to the used theme.</p>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(defn find-theme
   [theme-name]
-  (str theme-base theme-name))</pre>
+  (if (external-theme? theme-name)
+    theme-name
+    (str theme-base theme-name)))</pre>
 			</div>
 						<div class="box section">
 				<p>Transform a dependency so mustache can handle it.</p>
@@ -142,8 +188,9 @@
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(defn render-toc
-  [parsed-sources project settings readme theme]
-  (let [toc-template (fs/slurp-resource (str theme &quot;/toc.html&quot;))
+  [parsed-sources project settings readme theme external]
+  (let [toc-file (str theme &quot;/toc.html&quot;)
+        toc-template (if external (slurp toc-file) (fs/slurp-resource toc-file))
         filename (str (:output-to settings) &quot;/&quot; (:toc-filename settings))
         tmp (dorun (println (str &quot;Creating table of contents: &quot; filename)))
         params (toc-template-parameters parsed-sources project settings readme)]
@@ -154,19 +201,21 @@
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(defn render-ns
-  [parsed-source project settings theme]
-  (let [toc-template (fs/slurp-resource (str theme &quot;/ns.html&quot;))
+  [parsed-source project settings theme external]
+  (let [ns-file (str theme &quot;/ns.html&quot;)
+        ns-template (if external (slurp ns-file) (fs/slurp-resource ns-file))
         filename (str (:output-to settings) &quot;/&quot; (:ns parsed-source) &quot;.html&quot;)
         tmp (dorun (println (str &quot; ... rendering to &quot; filename)))
         params (ns-template-parameters parsed-source project settings)]
-    (spit filename (mustache/render toc-template params))))</pre>
+    (spit filename (mustache/render ns-template params))))</pre>
 			</div>
 						<div class="box section">
 				<p>Copy resources from theme to docs folder.</p>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(defn copy-resources
-  [settings theme]
+  [settings theme external]
+  (dorun (println &quot;Copying resources:&quot;))
   (dorun
     (map #(fs/spit-resource % theme (:output-to settings))
          (:resources
@@ -174,15 +223,31 @@
              (fs/slurp-resource (str theme &quot;/theme.edn&quot;)))))))</pre>
 			</div>
 						<div class="box section">
+				<p>Copy files from theme to docs folder.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn copy-files
+  [settings theme external]
+  (dorun (println &quot;Copying resources:&quot;))
+  (dorun
+    (map #(fs/copy-file % theme (:output-to settings))
+         (:resources
+           (edn/read-string
+             (slurp (str theme &quot;/theme.edn&quot;)))))))</pre>
+			</div>
+						<div class="box section">
 				<p>Render the documentation.</p>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(defn render
   [parsed-sources project settings readme]
-  (let [theme (find-theme (:theme settings))]
-    (copy-resources settings theme)
-    (dorun (map #(render-ns % project settings theme) parsed-sources))
-    (render-toc parsed-sources project settings readme theme)))</pre>
+  (let [theme (find-theme (:theme settings))
+        external (external-theme? (:theme settings))]
+    (dorun (map #(render-ns % project settings theme external) parsed-sources))
+    (render-toc parsed-sources project settings readme theme external)
+    (if external
+      (copy-files settings theme external)
+      (copy-resources settings theme external))))</pre>
 			</div>
 			
 			<div class="box footer">

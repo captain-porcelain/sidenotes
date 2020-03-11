@@ -99,18 +99,43 @@
   (map parse-source sources))</pre>
 			</div>
 						<div class="box section">
+				<p>Generate the documentation without further checks.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn generate-documentation
+  [settings]
+  (try
+    (let [project (read-deps &quot;deps.edn&quot;)
+          readme (fs/load-readme)
+          sources (fs/find-sources (:paths project))
+          parsed-sources (parse-sources sources)]
+      (renderer/render parsed-sources project settings readme))
+    (catch Exception e (.printStackTrace e))))</pre>
+			</div>
+						<div class="box section">
+				<p>Check that the config is valid.</p>
+			</div>
+			<div class="box section">
+				<pre class="brush: clojure">(defn perform-checks
+  [settings]
+  (if (renderer/external-theme? (:theme settings))
+    (if (renderer/external-theme-valid? (:theme settings))
+      true
+      (do
+        (dorun (println renderer/message-theme-invalid))
+        false))
+    true))</pre>
+			</div>
+						<div class="box section">
 				<p>Generate the documentation.</p>
 			</div>
 			<div class="box section">
 				<pre class="brush: clojure">(defn -main
   [&amp; args]
   (try
-    (let [settings (load-settings &quot;sidenotes.edn&quot;)
-          project (read-deps &quot;deps.edn&quot;)
-          readme (fs/load-readme)
-          sources (fs/find-sources (:paths project))
-          parsed-sources (parse-sources sources)]
-      (renderer/render parsed-sources project settings readme))
+    (let [settings (load-settings &quot;sidenotes.edn&quot;)]
+      (when (perform-checks settings)
+        (generate-documentation settings)))
     (catch Exception e (.printStackTrace e))))</pre>
 			</div>
 			

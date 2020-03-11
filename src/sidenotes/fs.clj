@@ -131,4 +131,13 @@
   "Load a resource and spit it to the output folder."
   [resource from to]
   (ensure-directory! (str to "/" (string/join "/" (butlast (string/split resource #"/")))))
+  (dorun (println (str "\t" resource " to " to)))
   (spit (str to "/" resource) (slurp-resource (str from "/" resource))))
+
+(defn copy-file
+  "Copy a file to the output folder."
+  [file from to]
+  (ensure-directory! (str to "/" (string/join "/" (butlast (string/split file #"/")))))
+  (dorun (println (str "\t" file " to " to)))
+  (io/copy (io/file (str from "/" file)) (io/file (str to "/" file))))
+

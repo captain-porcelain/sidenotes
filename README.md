@@ -12,7 +12,7 @@ In the current early version the following features are supported:
 - Generating table of contents containing dependencies and namespaces
 - One html file per namespace showing code and comments side by side
 - Support for markdown in comments
-- Disabling / Enabling adding comments to the documentation with @SidenotesDisable and @SidenotesEnable inside comments
+- Disabling / Enabling adding comments to the documentation with `@SidenotesDisable` and `@SidenotesEnable` inside comments
 - Choosing the filename for the table of contents
 
 ## Differences to Marginalia
@@ -58,14 +58,14 @@ read for the current folder. Other settings are available as well:
 
 | Setting | Description |
 | ------- | ----------- |
-| :projectname | Sets the name of the project in the table of contents page |
-| :description | Sets the description of the project in the table of contents page |
-| :output-to | The folder the documentation will be written to, default to docs |
-| :toc-filename | The filename of the table of contents page. Defaults to toc.html |
-| :include-readme | Include the readme (if it is markdown) in the table of contents page. Available only in sidenotes theme |
-| :theme | The theme to use. Defaults to marginalia |
-|  | Select marginalia if you want it similar to what [marginalia](https://github.com/gdeer81/marginalia/) generated |
-|  | Select sidenotes if you want the new css grid based layout with new features |
+| `:projectname` | Sets the name of the project in the table of contents page |
+| `:description` | Sets the description of the project in the table of contents page |
+| `:output-to` | The folder the documentation will be written to, defaults to `docs` |
+| `:toc-filename` | The filename of the table of contents page. Defaults to `toc.html` |
+| `:include-readme` | Include the readme (if it is markdown) in the table of contents page. Available only in `sidenotes` theme |
+| `:theme` | The theme to use. Defaults to `marginalia` |
+|  | Select `marginalia` if you want it similar to what [marginalia](https://github.com/gdeer81/marginalia/) generates |
+|  | Select `sidenotes` if you want the new css grid based layout with new features |
 
 ## Future Work
 
